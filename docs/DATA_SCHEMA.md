@@ -68,20 +68,25 @@
 
 ### 필드 규칙
 
-| 필드                                         | 규칙                                                                       |
-| -------------------------------------------- | -------------------------------------------------------------------------- |
-| `format` / `schemaVersion`                   | 리터럴 고정. 버전이 다르면 소비 측에서 거부해야 합니다                     |
-| `difficulty`                                 | `B` `N` `H` `A` `L` — BEGINNER·NORMAL·HYPER·ANOTHER·LEGGENDARIA            |
-| `difficultyName`                             | e-agate 표기 원문                                                          |
-| `level`                                      | 1~12 정수. 요청한 레벨이며 `difficult` 파라미터는 `level - 1`입니다        |
-| `style`                                      | `0` SP, `1` DP                                                             |
-| `lamp`                                       | `NO_PLAY` `FAILED` `ASSIST` `EASY` `CLEAR` `HARD` `EX_HARD` `FULL_COMBO`   |
-| `djLevel`                                    | `F` `E` `D` `C` `B` `A` `AA` `AAA` 또는 `null`                             |
-| `exScore` / `pgreat` / `great` / `missCount` | 값이 없으면 `null`. 미플레이 곡에서 발생합니다                             |
-| `notesRadar.values`                          | 6축 각각 숫자 또는 `null`                                                  |
-| `notesRadar.source`                          | 값을 읽은 경로. `status`(상태 페이지 DOM), `notesradar`(노트레이더 페이지) |
-| `notesRadar.matchedByLabel`                  | 축 이름으로 매칭했는지 여부. `false`이면 순서 기반 추정입니다              |
-| `meta.status`                                | `empty`(0곡), `complete`(경고 없음), `partial`(일부 실패·상한 도달)        |
+| 필드                                         | 규칙                                                                          |
+| -------------------------------------------- | ----------------------------------------------------------------------------- |
+| `format` / `schemaVersion`                   | 리터럴 고정. 버전이 다르면 소비 측에서 거부해야 합니다                        |
+| `difficulty`                                 | `B` `N` `H` `A` `L` — BEGINNER·NORMAL·HYPER·ANOTHER·LEGGENDARIA               |
+| `difficultyName`                             | e-agate 표기 원문                                                             |
+| `level`                                      | 1~12 정수. 요청한 레벨이며 `difficult` 파라미터는 `level - 1`입니다           |
+| `style`                                      | `0` SP, `1` DP                                                                |
+| `lamp`                                       | `NO_PLAY` `FAILED` `ASSIST` `EASY` `CLEAR` `HARD` `EX_HARD` `FULL_COMBO`      |
+| `djLevel`                                    | `F` `E` `D` `C` `B` `A` `AA` `AAA` 또는 `null`                                |
+| `exScore` / `pgreat` / `great` / `missCount` | 값이 없으면 `null`. 미플레이 곡에서 발생합니다                                |
+| `notesRadar.values`                          | 6축 각각 숫자 또는 `null`                                                     |
+| `notesRadar.raw`                             | 라벨-값 원문. 빈 라벨은 저장하지 않습니다                                     |
+| `notesRadar.source`                          | 값을 읽은 경로. `status`(상태 페이지 DOM), `notesradar`(노트레이더 페이지)    |
+| `notesRadar.matchedByLabel`                  | 축 이름으로 매칭했는지 여부. `false`이면 순서 기반 추정입니다                 |
+| `meta.status`                                | `empty`(0곡), `complete`(경고 없음), `partial`(일부 실패·상한 도달·차트 제외) |
+
+### 저장 전 검증
+
+저장 직전에 전체 스키마로 검증합니다. 실패하면 필드 단위로 낮춰 저장하며, 차트 한 건이 잘못되면 그 차트만 제외합니다. 이때 `meta.status`는 `partial`이 되고 제외 건수가 `meta.warnings`에 기록됩니다.
 
 ### chartId
 

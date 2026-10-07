@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { describe, expect, test } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import { parseDifficultyPage, parseLoginState, parseRadarSection, parseStatusPage } from '@core/eagate-parsers'
+import { NotesRadarSchema } from '@shared/schema'
 import { chartIdFrom } from '@core/chart-id'
 
 const fixture = (name: string) => {
@@ -62,6 +63,44 @@ describe('parseRadarSection', () => {
 
         expect(radar.source).toBe('notesradar')
         expect(Object.values(radar.values).every((value) => value === null)).toBe(true)
+        expect(radar.raw).toHaveLength(0)
+    })
+
+    test('빈 라벨 페어를 결과에서 제거한다', () => {
+        const document = new JSDOM(`
+            <div class="dj-status">
+                <div id="notes">
+                    <ul>
+                        <li><p></p><p>128.45</p></li>
+                        <li><p>NOTES</p><p>128.45</p></li>
+                        <li><p>CHORD</p><p>131.22</p></li>
+                    </ul>
+                </div>
+            </div>
+        `).window.document
+
+        const radar = parseRadarSection(document, 'status')
+
+        expect(radar.raw.every((pair) => pair.label !== '')).toBe(true)
+        expect(radar.values.NOTES).toBe(128.45)
+        expect(radar.values.CHORD).toBe(131.22)
+    })
+
+    test('저장 가능한 형식을 만족한다', () => {
+        const document = new JSDOM(`
+            <div class="dj-status">
+                <div id="notes">
+                    <ul>
+                        <li><p></p><p></p></li>
+                        <li><p>NOTES</p><p>128.45</p></li>
+                    </ul>
+                </div>
+            </div>
+        `).window.document
+
+        const radar = parseRadarSection(document, 'status')
+
+        expect(NotesRadarSchema.safeParse(radar).success).toBe(true)
     })
 })
 
@@ -105,6 +144,20 @@ describe('parseDifficultyPage', () => {
 
         expect(result.requiresLogin).toBe(true)
         expect(result.charts).toHaveLength(0)
+    })
+
+    test('목록이 있으면 이전 페이지의 데이터 없음 안내가 남아 있어도 종료로 보지 않는다', () => {
+        const result = parseDifficultyPage(fixture('difficulty-with-stale-notice.html'), 12, 0)
+
+        expect(result.isNoData).toBe(false)
+        expect(result.charts).toHaveLength(2)
+    })
+
+    test('램프 이미지가 없는 요약 행은 곡으로 세지 않는다', () => {
+        const result = parseDifficultyPage(fixture('difficulty-with-summary-row.html'), 12, 0)
+
+        expect(result.charts).toHaveLength(1)
+        expect(result.charts[0]?.title).toBe('冥')
     })
 })
 

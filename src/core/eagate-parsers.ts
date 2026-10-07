@@ -24,21 +24,11 @@ export type RadarSource = NotesRadar['source']
 
 const NO_DATA_MARKER = 'データがみつかりません'
 const PLACEHOLDER_PATTERN = /^-{2,}$/
-const TEXT_NODE = 3
+const DIFFICULTY_COLUMN_COUNT = 5
 
 const normalizeText = (value: string | null | undefined) => (value ?? '').normalize('NFKC').replace(/\s+/g, ' ').trim()
 
 const elementText = (element: Element | null | undefined) => normalizeText(element?.textContent)
-
-const directText = (element: Element | null | undefined) => {
-    if (element == null) return ''
-
-    const parts = Array.from(element.childNodes)
-        .filter((node) => node.nodeType === TEXT_NODE)
-        .map((node) => node.textContent ?? '')
-
-    return normalizeText(parts.join(' '))
-}
 
 const isPlaceholder = (value: string) => value === '' || value === '---' || PLACEHOLDER_PATTERN.test(value)
 
@@ -138,6 +128,10 @@ const pairFromParagraphs = (item: Element): Pair | null => {
     return { label: elementText(first), value: elementText(second) }
 }
 
+const MAX_RAW_PAIRS = 64
+
+const sanitizePairs = (pairs: Pair[]) => pairs.filter((pair) => pair.label !== '').slice(0, MAX_RAW_PAIRS)
+
 const pairsFromListItems = (parent: ParentNode, selector: string) =>
     Array.from(parent.querySelectorAll(selector)).flatMap((item) => {
         const pair = pairFromParagraphs(item)
@@ -217,7 +211,7 @@ const hasRadarValues = (values: Record<RadarAxis, number | null>) => RADAR_AXES.
 export const parseRadarSection = (doc: Document, source: RadarSource): NotesRadar => {
     const roots = ['#notes', '#radar', '.dj-status'].map((selector) => doc.querySelector(selector)).filter((root): root is Element => root !== null)
     const scope = roots[0] ?? doc.body
-    const pairs = [...pairsFromListItems(scope, 'ul li'), ...pairsFromDefinitionList(scope), ...pairsFromTable(scope, 'table tr')]
+    const pairs = sanitizePairs([...pairsFromListItems(scope, 'ul li'), ...pairsFromDefinitionList(scope), ...pairsFromTable(scope, 'table tr')])
 
     const fromPairs = radarFromPairs(pairs)
     if (hasRadarValues(fromPairs.values)) {
@@ -256,7 +250,7 @@ const collectRadarJsonPairs = (value: unknown, pairs: Pair[]) => {
         (candidate) => typeof candidate === 'number' || (typeof candidate === 'string' && /-?\d/.test(candidate)),
     )
 
-    if (typeof rawLabel === 'string' && rawValue !== undefined) {
+    if (typeof rawLabel === 'string' && rawLabel !== '' && rawValue !== undefined) {
         pairs.push({ label: rawLabel, value: String(rawValue) })
     }
 
@@ -279,9 +273,10 @@ const collectRadarJsonPairs = (value: unknown, pairs: Pair[]) => {
 export const parseRadarJson = (payload: unknown, source: RadarSource): NotesRadar => {
     const pairs: Pair[] = []
     collectRadarJsonPairs(payload, pairs)
-    const { values, matchedByLabel } = radarFromPairs(pairs)
+    const sanitized = sanitizePairs(pairs)
+    const { values, matchedByLabel } = radarFromPairs(sanitized)
 
-    return { values, raw: pairs, source, matchedByLabel }
+    return { values, raw: sanitized, source, matchedByLabel }
 }
 
 const findPairValue = (pairs: Pair[], pattern: RegExp) => pairs.find((pair) => pattern.test(pair.label))?.value ?? null
@@ -398,7 +393,7 @@ const matchDjLevel = (cell: Element | null): DjLevel | null => {
     return DJ_LEVELS.find((candidate) => candidate === text) ?? null
 }
 
-const matchLamp = (row: Element): Lamp => {
+const findLamp = (row: Element): Lamp | null => {
     for (const image of Array.from(row.querySelectorAll('img'))) {
         const source = image.getAttribute('src') ?? ''
         const match = source.match(/clflg(\d)\.gif/i)
@@ -409,7 +404,7 @@ const matchLamp = (row: Element): Lamp => {
         if (lamp !== undefined) return lamp
     }
 
-    return 'NO_PLAY'
+    return null
 }
 
 const parseScore = (value: string) => {
@@ -447,17 +442,23 @@ const parseMissCount = (row: Element) => {
  * @param style - 0 for SP, 1 for DP
  */
 export const parseDifficultyPage = (doc: Document, level: number, style: 0 | 1): DifficultyPageResult => {
-    const text = normalizeText(doc.body?.textContent)
-    const isNoData = text.includes(NO_DATA_MARKER)
-    const requiresLogin = isLoginRequiredPage(doc)
     const table = doc.querySelector('div.series-difficulty table')
+    const requiresLogin = isLoginRequiredPage(doc)
+    const notice = elementText(doc.querySelector('.music-notice, #base .music-notice'))
+    const isNoData = table == null && notice.includes(NO_DATA_MARKER)
+
     if (table == null) return { charts: [], isNoData, requiresLogin }
 
     const charts = Array.from(table.querySelectorAll('tr')).flatMap((row) => {
         const cells = Array.from(row.querySelectorAll('td'))
+        if (cells.length < DIFFICULTY_COLUMN_COUNT) return []
+
         const titleCell = cells[0]
         const difficultyCell = cells[1]
-        if (titleCell === undefined || difficultyCell === undefined || cells.length < 4) return []
+        if (titleCell === undefined || difficultyCell === undefined) return []
+
+        const lamp = findLamp(row)
+        if (lamp === null) return []
 
         const anchor = titleCell.querySelector('a.music_info') ?? titleCell.querySelector('a')
         const title = elementText(anchor)
@@ -480,7 +481,7 @@ export const parseDifficultyPage = (doc: Document, level: number, style: 0 | 1):
                 pgreat: score.pgreat,
                 great: score.great,
                 missCount: parseMissCount(row),
-                lamp: matchLamp(row),
+                lamp,
             } satisfies ParsedChart,
         ]
     })

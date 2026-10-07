@@ -1,6 +1,4 @@
 import {
-    DATASET_FORMAT,
-    DATASET_SCHEMA_VERSION,
     DELAY_PROFILES,
     DIFFICULTY_MAX_PAGES_PER_LEVEL,
     DIFFICULTY_OFFSET_STEP,
@@ -14,7 +12,7 @@ import {
     LEVEL_MIN,
     LOGIN_STATE_MAX_AGE_MS,
 } from '@shared/constants'
-import { DEFAULT_SETTINGS, DatasetSchema } from '@shared/schema'
+import { DEFAULT_SETTINGS } from '@shared/schema'
 import type { Chart, CollectionState, Dataset, LoginState, Settings } from '@shared/schema'
 import {
     clearDataset,
@@ -31,6 +29,7 @@ import {
 } from '@shared/storage'
 import type { BackgroundRequest, BackgroundResponse, ExtractRequest, ExtractResponse, Overview } from '@shared/messages'
 import { chartIdFrom } from '@core/chart-id'
+import { buildDataset } from '@core/dataset-builder'
 import { toRankImport } from '@core/rank-export'
 
 export const COLLECTION_CANCELLED = 'collection-cancelled'
@@ -62,11 +61,24 @@ const closeCollectionTab = async (tabId: number) => {
     await chrome.tabs.remove(tabId).catch(() => undefined)
 }
 
+const sameLocation = (candidate: string | undefined, target: string) => {
+    if (candidate === undefined) return false
+
+    try {
+        const from = new URL(candidate)
+        const to = new URL(target)
+
+        return from.pathname === to.pathname && from.search === to.search
+    } catch {
+        return false
+    }
+}
+
 const waitForLoad = (tabId: number, url: string, timeoutMs: number) =>
     new Promise<void>((resolve, reject) => {
         let settled = false
 
-        const matches = (tab: chrome.tabs.Tab) => tab.status === 'complete' && (tab.url ?? '').split('?')[0] === url.split('?')[0]
+        const matches = (tab: chrome.tabs.Tab) => tab.status === 'complete' && sameLocation(tab.url, url)
 
         const finish = (error?: Error) => {
             if (settled) return
@@ -100,12 +112,14 @@ const navigate = async (tabId: number, url: string) => {
 }
 
 const requestExtract = async (tabId: number, request: ExtractRequest): Promise<ExtractResponse> => {
-    const raw: unknown = await chrome.tabs.sendMessage(tabId, request).catch(() => null)
-    if (raw === null || typeof raw !== 'object' || !('ok' in raw)) {
-        return { ok: false, error: '콘텐츠 스크립트가 응답하지 않습니다. e-agate 탭 상태를 확인해 주세요.' }
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+        const raw: unknown = await chrome.tabs.sendMessage(tabId, request).catch(() => null)
+
+        if (raw !== null && typeof raw === 'object' && 'ok' in raw) return raw as ExtractResponse
+        await wait(300)
     }
 
-    return raw as ExtractResponse
+    return { ok: false, error: '콘텐츠 스크립트가 응답하지 않습니다. e-agate 탭 상태를 확인해 주세요.' }
 }
 
 const injectedRadarJson = async (gameVersion: number, style: number, timeoutMs: number) => {
@@ -221,6 +235,7 @@ const collectCharts = async (tabId: number, settings: Settings) => {
     const warnings: string[] = []
     const failedLevels: number[] = []
     const totalPages = Math.max(1, levels.length * DIFFICULTY_PAGE_ESTIMATE)
+    const seenChartIds = new Set<string>()
     let pagesFetched = 0
 
     for (const level of levels) {
@@ -265,12 +280,15 @@ const collectCharts = async (tabId: number, settings: Settings) => {
             const identified = await Promise.all(
                 pageCharts.map(async (chart) => ({ ...chart, chartId: await chartIdFrom(chart.title, chart.difficulty) })),
             )
+            const fresh = identified.filter((chart) => !seenChartIds.has(chart.chartId))
+            for (const chart of fresh) seenChartIds.add(chart.chartId)
 
-            charts.push(...identified)
+            charts.push(...fresh)
             pagesFetched += 1
             page += 1
 
-            if (difficulty.isNoData || pageCharts.length === 0) reachedEnd = true
+            if (difficulty.isNoData) reachedEnd = true
+            else if (pageCharts.length === 0) reachedEnd = true
             else if (pageCharts.length < DIFFICULTY_OFFSET_STEP) reachedEnd = true
             else {
                 offset += DIFFICULTY_OFFSET_STEP
@@ -312,28 +330,8 @@ const runCollection = async (settings: Settings) => {
 
         const { player, notesRadar } = await collectPlayerAndRadar(tabId, settings.style)
         const { charts, pagesFetched, warnings, failedLevels } = await collectCharts(tabId, settings)
-        const finishedAt = new Date().toISOString()
 
-        const dataset = DatasetSchema.parse({
-            format: DATASET_FORMAT,
-            schemaVersion: DATASET_SCHEMA_VERSION,
-            gameVersion: GAME_VERSION,
-            player,
-            notesRadar,
-            charts,
-            meta: {
-                status: charts.length === 0 ? 'empty' : warnings.length === 0 ? 'complete' : 'partial',
-                generatedAt: finishedAt,
-                finishedAt,
-                gameVersion: GAME_VERSION,
-                style: settings.style,
-                levels: settings.levels,
-                delay: { minMs: DELAY_PROFILES[settings.delayProfile].minMs, maxMs: DELAY_PROFILES[settings.delayProfile].maxMs },
-                pagesFetched,
-                failedLevels,
-                warnings,
-            },
-        })
+        const dataset = buildDataset(player, notesRadar, charts, settings, { pagesFetched, failedLevels, warnings })
 
         await writeDataset(dataset)
         await setProgress({
@@ -342,9 +340,9 @@ const runCollection = async (settings: Settings) => {
             message: `${dataset.charts.length}개 차트 데이터를 저장했습니다.`,
             percent: 100,
             chartCount: dataset.charts.length,
-            pagesFetched,
-            warnings,
-            finishedAt,
+            pagesFetched: dataset.meta.pagesFetched,
+            warnings: dataset.meta.warnings,
+            finishedAt: dataset.meta.finishedAt,
         })
     } catch (error) {
         const cancelled = error instanceof Error && error.message === COLLECTION_CANCELLED
