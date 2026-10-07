@@ -10,14 +10,15 @@ bun run build       # MV3 번들 생성
 
 최근 결과(2026-10-07):
 
-| 검사                                              | 결과                                                                                                                                               |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bun run typecheck`                               | 오류 0                                                                                                                                             |
-| `bun test`                                        | 115 pass / 0 fail, 11개 파일                                                                                                                       |
-| `bun run build`                                   | 성공. `host_permissions`는 e-agate와 `https://iidx.hyns.dev/*`, `default_locale`은 `en`                                                            |
-| `build/_locales`                                  | `en`, `ja`, `ko` 세 폴더가 있고 `build/popup`에 `index.html`·`index.js`·`global.css`가 산출됨                                                      |
-| `RANK_ORIGIN=http://localhost:3000 bun run build` | manifest 출처가 `http://localhost:3000/*`로 바뀌고 background 번들에서 `iidx.hyns.dev`가 사라짐. 기본값으로 다시 빌드해 복귀 확인                  |
-| 레이아웃 확인(headless Chrome, 폭 440px)          | ko·ja·en에서 긴 DJ NAME·곡명·핸들이 줄바꿈되고 가로 넘침과 버튼 글자 넘침이 없음. 가짜 `chrome` 스텁으로 렌더한 결과이며 실제 익스텐션 로드는 아님 |
+| 검사                                              | 결과                                                                                                                                                                                                     |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun run typecheck`                               | 오류 0                                                                                                                                                                                                   |
+| `bun test`                                        | 147 pass / 0 fail, 13개 파일                                                                                                                                                                             |
+| `bun run build`                                   | 성공. `host_permissions`는 e-agate와 `https://iidx.hyns.dev/*`, `content_scripts`는 e-agate용 `content-script.js`와 `https://iidx.hyns.dev/*`용 `rank-content-script.js` 두 항목, `permissions`는 그대로 |
+| `build/`                                          | `content-script.js`·`rank-content-script.js`·`background/index.js`·`popup/`·`_locales/{en,ja,ko}`가 산출되고 번들에 `/api/import/records` 호출이 없음                                                    |
+| `RANK_ORIGIN=http://localhost:3000 bun run build` | `host_permissions`와 iidx-rank용 content script의 `matches`가 `http://localhost:3000/*`로 바뀌고 background 번들에서 `iidx.hyns.dev`가 사라짐. 기본값으로 다시 빌드해 복귀 확인                          |
+
+popup 레이아웃(폭 440px, ko·ja·en)은 이전 버전에서 headless Chrome으로 확인했고, 반영 카드의 문구와 진행 중 안내를 바꾼 뒤에는 다시 확인하지 않았습니다.
 
 테스트가 덮는 범위:
 
@@ -27,15 +28,20 @@ bun run build       # MV3 번들 생성
 - `tests/dataset-builder.test.ts`, `tests/contract.test.ts`
     - dataset v2 검증, 경고를 포함한 `partial` 판정, 설정 스키마, rank-import v2 필드 집합
 - `tests/rank-client.test.ts`, `tests/rank-sync.test.ts`, `tests/build-config.test.ts`
-    - 세션 확인과 가져오기 응답 분류, 반영 전 건너뜀 사유(`no_data`·`dp_unsupported`·`not_logged_in`), `RANK_ORIGIN` 정규화와 manifest 생성
+    - 세션 확인 응답 분류, 자동·수동 반영의 시작 판단과 건너뜀 사유(`no_data`·`dp_unsupported`·`not_logged_in`), 화면이 보고한 결과와 실패 코드의 사유 매핑, `changes` 필드 수용, 만료 처리
+    - `RANK_ORIGIN` 정규화와 manifest 생성(`host_permissions`, content script 두 항목)
+- `tests/rank-bridge.test.ts`(jsdom), `tests/rank-handoff.test.ts`
+    - content script의 `hello`·`payload`·`none` 전송과 `targetOrigin`, `ready`마다의 handoff 조회, `result` 검증과 전달
+    - 다른 창·다른 출처·다른 채널·형식이 다른 메시지 무시, handoff 10분 만료 경계, content script 요청의 보낸 쪽 확인
 - `tests/background.test.ts`
     - service worker 재시작 후 `running` 복구, 이전 버전 저장 값 삭제, 잘못된 요청·설정 거부, 데이터 없음 시 내보내기·반영 거부, 로그인 페이지 열기
+    - 수동 반영의 handoff 생성과 `/import` 탭 열기, iidx-rank 탭이 아닌 곳에서 온 handoff 요청 거부, 반복 조회, 다른 `handoffId` 무시, 결과 저장과 handoff 삭제, 만료와 유실 시 `handoff_expired`, DP 전환, 데이터 삭제
 - `tests/message-keys.test.ts`, `tests/i18n-keys.test.ts`
     - 메시지 키와 파라미터 정의, 세 로케일의 키 집합 일치, placeholder 이름과 순서, 코드가 쓰는 키의 존재, manifest `__MSG_*__` 참조, 화면 코드의 한국어·일본어 하드코딩 금지
 - `tests/popup.test.tsx`(jsdom에 실제 React 마운트)
     - 로딩·로그인 미확인·확인 실패 표시와 비활성 사유, 수집 시작 요청 본문
     - `aria-pressed`, DP 경고, 수집 중 설정·반영 버튼 비활성과 live region
-    - 경고 4건 초과 생략, 반영 결과(시각·건수·일치하지 않은 곡·사유·서버 코드), 곡명의 HTML 비주입
+    - 경고 4건 초과 생략, 반영 결과(시각·건수·일치하지 않은 곡·사유·서버 코드), 진행 중 안내와 만료 사유, 비로그인에서도 반영 버튼 활성, 곡명의 HTML 비주입
     - 삭제 확인 단계, background 무응답·거부·형식 오류 표시, 저장소 변경 시 재조회, 영어 표시, 번역 누락 시 키 표시
 
 ## 수동 검증
@@ -64,21 +70,23 @@ bun run build       # MV3 번들 생성
 
 ### 4. iidx-rank 연동
 
-사전 준비는 iidx-rank 로컬 서버와 익스텐션의 출처를 맞추는 것입니다.
+사전 준비는 iidx-rank 로컬 서버와 익스텐션의 출처를 맞추는 것입니다. 서버에 익스텐션 ID를 등록하는 절차는 없습니다.
 
-1. iidx-rank를 `http://localhost:3000`으로 띄웁니다. 서버 환경에서 `.env`는 직접 열지 않고 `.env.example`을 참고해 `EXTENSION_ORIGINS`를 설정합니다.
-2. `RANK_ORIGIN=http://localhost:3000 bun run build`로 빌드한 뒤 `chrome://extensions`에서 `build/`를 로드(또는 새로고침)합니다.
-3. `chrome://extensions`에 보이는 익스텐션 ID를 서버 `EXTENSION_ORIGINS`에 `chrome-extension://<ID>`로 등록하고 서버를 다시 시작합니다.
+1. iidx-rank를 `http://localhost:3000`으로 띄웁니다.
+2. `RANK_ORIGIN=http://localhost:3000 bun run build`로 빌드한 뒤 `chrome://extensions`에서 `build/`를 로드(또는 새로고침)합니다. 이미 열려 있던 iidx-rank 탭은 새로고침해야 content script가 주입됩니다.
 
 확인 순서:
 
-1. **로그인 전**: iidx-rank에 로그인하지 않은 브라우저에서 popup을 엽니다. iidx-rank 카드가 `로그인 필요`이고 대상 출처가 `http://localhost:3000`으로 보여야 합니다. 반영 버튼은 비활성이며 `iidx-rank에 로그인해야 반영할 수 있습니다`가 보입니다.
-2. **로그인 열기**: `iidx-rank 로그인 열기`로 새 탭을 열어 로그인(이메일·GitHub·Naver)합니다. popup을 다시 열면 자동으로, 열어 둔 채라면 `다시 확인`으로 `로그인됨`과 이름·핸들이 보여야 합니다. 로그인이 되었는데도 `로그인 필요`이면 세션 쿠키가 service worker 요청에 붙지 않는 것이므로 `확인 필요 항목`을 참고합니다.
-3. **자동 반영**: SP 레벨 12로 수집합니다. 수집이 끝나면 `iidx-rank에 반영` 카드에 `반영 성공`, 방식 `자동`, 시각과 건수(전송·일치·변경·일치하지 않은 곡)가 보여야 합니다.
-4. **결과 확인**: iidx-rank의 사용자 페이지에서 램프·등급이 반영되었는지, 설정 화면의 가져오기 상태에 같은 건수가 보이는지 확인합니다. 같은 데이터로 `iidx-rank에 반영`을 다시 누르면 변경 건수가 0이어야 합니다(10초 안에 누르면 `반영 실패`와 사유가 보이는 것이 정상).
-5. **실패 사유**: 서버에서 `EXTENSION_ORIGINS`를 비우고 반영하면 `반영 실패`와 익스텐션 ID 등록 안내, 서버 코드 `ORIGIN_NOT_ALLOWED`가 보여야 합니다.
-6. **DP**: 스타일을 DP로 바꾸면 경고가 보이고 반영 버튼이 `DP 데이터는 iidx-rank에 반영되지 않습니다` 사유로 비활성이어야 합니다.
-7. **일치하지 않은 곡**: 건수와 앞 5건이 곡명·난이도로 보이면 곡명 표기 차이 후보입니다. 서버 별칭 표 작성의 근거로 기록합니다.
+1. **로그인 열기**: iidx-rank에 로그인하지 않은 브라우저에서 popup을 엽니다. iidx-rank 카드가 `로그인 필요`이고 대상 출처가 `http://localhost:3000`으로 보여야 합니다. `iidx-rank 로그인 열기`로 새 탭을 열어 로그인(이메일·GitHub·Naver)한 뒤 popup을 다시 열면 `로그인됨`과 이름·핸들이 보여야 합니다. 로그인이 되었는데도 `로그인 필요`이면 세션 쿠키가 service worker 요청에 붙지 않는 것이므로 `미검증·확인 필요`를 참고합니다.
+2. **수동 반영**: 저장된 SP 데이터가 있는 상태에서 `iidx-rank에 반영` 카드의 `가져오기 화면을 열어 반영`을 누릅니다. `http://localhost:3000/import` 탭이 새 활성 탭으로 열리고 업로드 중 표시 뒤에 결과 표(건수, 바뀐 차트, 일치하지 않은 곡)가 보여야 합니다. popup을 다시 열면 반영 카드에 `반영 성공`, 방식 `수동`, 계정, 시각과 건수(전송·일치·변경·일치하지 않은 곡)가 화면과 같은 값으로 보여야 합니다.
+3. **자동 반영**: iidx-rank에 로그인한 상태에서 SP 레벨 12로 수집합니다. 수집이 끝나면 `/import` 탭이 자동으로 열리고 업로드 중 → 결과 표가 보여야 하며, popup 반영 카드에는 방식 `자동`으로 같은 결과가 남아야 합니다.
+4. **진행 중과 다시 시도**: 반영 버튼을 누른 뒤 `/import` 탭을 결과가 나오기 전에 닫고 popup을 열면 `반영 진행 중`과 탭을 닫았으면 다시 시도하라는 안내가 보여야 합니다. 버튼을 다시 누르면 새 탭에서 반영됩니다. 10분 동안 결과가 오지 않으면 popup을 열었을 때 `반영 실패`와 제한 시간 안내가 보여야 합니다.
+5. **화면 새로고침**: `/import` 탭이 본문을 받은 뒤 결과가 나오기 전에 새로고침해도 같은 본문으로 다시 진행되어야 합니다. 결과가 popup에 기록된 뒤 새로고침하면 화면은 대기 중인 데이터가 없다는 안내를 보여야 합니다.
+6. **비로그인 수동 반영**: iidx-rank에서 로그아웃하고 반영 버튼을 누릅니다. 버튼은 활성이어야 하고 `/import` 화면이 로그인을 안내해야 합니다. 로그인한 뒤 같은 데이터로 이어서 업로드되고 popup에 결과가 남아야 합니다. 로그인하지 않은 채 자동 반영이 일어날 조건(수집 완료)에서는 탭이 열리지 않고 반영 카드에 `반영 건너뜀`과 로그인 사유가 보여야 합니다.
+7. **결과 확인**: iidx-rank의 사용자 페이지에서 램프·등급이 반영되었는지, 설정 화면의 가져오기 상태에 같은 건수가 보이는지 확인합니다. 같은 데이터로 다시 반영하면 변경 건수가 0이어야 합니다(10초 안에 다시 반영하면 화면과 popup에 실패와 `IMPORT_COOLDOWN`이 보이는 것이 정상).
+8. **DP**: 스타일을 DP로 바꾸면 경고가 보이고 반영 버튼이 `DP 데이터는 iidx-rank에 반영되지 않습니다` 사유로 비활성이어야 합니다.
+9. **일치하지 않은 곡**: 건수와 앞 5건이 곡명·난이도로 보이면 곡명 표기 차이 후보입니다. 서버 별칭 표 작성의 근거로 기록합니다.
+10. **다른 페이지**: iidx-rank의 `/import`가 아닌 페이지를 열어 둔 채 반영해도 그 페이지의 동작이 달라지지 않아야 합니다.
 
 ### 5. export와 삭제
 
@@ -91,8 +99,10 @@ bun run build       # MV3 번들 생성
 다음은 로그인 세션 또는 실제 Chrome이 필요해 이번 자동 검사로 확인하지 못했습니다.
 
 - 실제 Chrome에 로드한 동작 전체와 실제 e-agate의 DOM(라벨 문자열, 미플레이 행의 셀 내용, 노트레이더 구조, 세션 만료 시 이동 방식).
-- service worker의 `fetch(credentials: 'include')`에 iidx-rank 세션 쿠키가 실제로 붙는지. SameSite와 서드파티 쿠키 차단 설정의 영향은 공식 문서로 확정하지 못했습니다. 붙지 않으면 iidx-rank 출처의 content script가 first-party로 요청하는 방식을 검토합니다.
-- iidx-rank의 `/api/extension/session`과 `/api/import/records`는 계약 문서만 보고 구현했습니다. `handle`은 `string | null`로 가정합니다.
+- service worker의 `fetch(credentials: 'include')`에 iidx-rank 세션 쿠키가 실제로 붙는지. 세션 확인(`GET /api/extension/session`)에만 해당하며, 붙지 않으면 자동 반영이 `not_logged_in`으로 건너뛰어집니다. 수동 반영은 세션 확인 없이 화면을 열므로 영향이 없습니다.
+- 가져오기 화면(`/import`)과의 메시지 대화는 계약 문서(`docs/E-AMUSEMENT.md`의 "익스텐션 반영 흐름 (페이지 경유)")만 보고 구현했고 실제 화면과 함께 실행해 보지 않았습니다. content script가 실제 Chrome에서 `http://localhost:3000/*`처럼 포트가 있는 match pattern으로 주입되는지도 실기 확인이 필요합니다(Chrome 문서는 포트 지정을 지원한다고 적고 있습니다).
+- iidx-rank의 `/api/extension/session`은 계약 문서만 보고 구현했습니다. `handle`은 `string | null`로 가정합니다.
+- 수집 직후 자동으로 열리는 `/import` 탭이 활성 탭이 되는 것은 계약대로이며, 사용자가 다른 작업 중일 때의 사용성은 실기에서 확인합니다.
 - 세션 만료가 `/gate/p/login.html` 리다이렉트로 오면 `session_expired`가 아니라 `url_mismatch`로 잡혀 재시도 후 레벨 실패 경로를 탑니다.
 - 0곡 레벨은 `warning_level_first_page_empty` 때문에 `partial`로 표시될 수 있습니다.
 - `unmatchedCount`는 서버가 200건으로 자른 뒤의 길이입니다.
