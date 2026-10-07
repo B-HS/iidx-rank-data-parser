@@ -1,7 +1,19 @@
 import { z } from 'zod'
-import { DATASET_FORMAT, DATASET_SCHEMA_VERSION } from '@shared/constants'
-import { COLLECTION_STATUSES, DIFFICULTY_NAMES, DIFFICULTY_SHORT_CODES, DJ_LEVELS, LAMP_VALUES, PLAY_STYLES, RADAR_AXES } from '@shared/domain'
+import { DATASET_FORMAT, DATASET_SCHEMA_VERSION, LEVEL_MAX, LEVEL_MIN } from '@shared/constants'
+import {
+    COLLECTION_PHASES,
+    COLLECTION_STATUSES,
+    DATASET_STATUSES,
+    DELAY_PROFILE_NAMES,
+    DIFFICULTY_NAMES,
+    DIFFICULTY_SHORT_CODES,
+    DJ_LEVELS,
+    LAMP_VALUES,
+    PLAY_STYLES,
+    RADAR_AXES,
+} from '@shared/domain'
 import type { CollectionStatus, DifficultyCode, DifficultyName, DjLevel, Lamp, PlayStyle, RadarAxis } from '@shared/domain'
+import { LocalizedMessageSchema } from '@shared/message-keys'
 
 export { DIFFICULTY_NAME_TO_CODE, LAMP_NAME_BY_INDEX } from '@shared/domain'
 export { COLLECTION_STATUSES, DIFFICULTY_NAMES, DIFFICULTY_SHORT_CODES, DJ_LEVELS, LAMP_VALUES, PLAY_STYLES, RADAR_AXES } from '@shared/domain'
@@ -12,6 +24,8 @@ export const DifficultyCodeSchema = z.enum(DIFFICULTY_SHORT_CODES)
 export const LampSchema = z.enum(LAMP_VALUES)
 export const DjLevelSchema = z.enum(DJ_LEVELS)
 export const CollectionStatusSchema = z.enum(COLLECTION_STATUSES)
+export const CollectionPhaseSchema = z.enum(COLLECTION_PHASES)
+export const DatasetStatusSchema = z.enum(DATASET_STATUSES)
 
 export const PairSchema = z.object({
     label: z.string().min(1),
@@ -48,7 +62,7 @@ export const ChartSchema = z.object({
     title: z.string().min(1),
     difficultyName: DifficultyNameSchema,
     difficulty: DifficultyCodeSchema,
-    level: z.number().int().min(1).max(12),
+    level: z.number().int().min(LEVEL_MIN).max(LEVEL_MAX),
     style: PlayStyleSchema,
     djLevel: DjLevelSchema.nullable(),
     exScore: z.number().int().nonnegative().nullable(),
@@ -60,8 +74,31 @@ export const ChartSchema = z.object({
 
 export type Chart = z.infer<typeof ChartSchema>
 
+export const ParsedChartSchema = ChartSchema.omit({ chartId: true })
+
+export type ParsedChart = z.infer<typeof ParsedChartSchema>
+
+export const DifficultyPageSchema = z.object({
+    charts: z.array(ParsedChartSchema),
+    rowCount: z.number().int().nonnegative(),
+    skippedRowCount: z.number().int().nonnegative(),
+    hasTable: z.boolean(),
+    isNoData: z.boolean(),
+    requiresLogin: z.boolean(),
+})
+
+export type DifficultyPage = z.infer<typeof DifficultyPageSchema>
+
+export const LoginPageSchema = z.object({
+    isLoggedIn: z.boolean(),
+    communityNickname: z.string().nullable(),
+    djName: z.string().nullable(),
+})
+
+export type LoginPage = z.infer<typeof LoginPageSchema>
+
 export const DatasetMetaSchema = z.object({
-    status: z.enum(['empty', 'partial', 'complete']),
+    status: DatasetStatusSchema,
     generatedAt: z.string().datetime().nullable(),
     finishedAt: z.string().datetime().nullable(),
     gameVersion: z.number().int(),
@@ -70,7 +107,7 @@ export const DatasetMetaSchema = z.object({
     delay: z.object({ minMs: z.number().int(), maxMs: z.number().int() }),
     pagesFetched: z.number().int().nonnegative(),
     failedLevels: z.array(z.number().int()),
-    warnings: z.array(z.string()),
+    warnings: z.array(LocalizedMessageSchema),
 })
 
 export type DatasetMeta = z.infer<typeof DatasetMetaSchema>
@@ -90,15 +127,17 @@ export type Dataset = z.infer<typeof DatasetSchema>
 export const CollectionStateSchema = z.object({
     status: CollectionStatusSchema,
     runId: z.string().nullable(),
-    phase: z.string(),
-    message: z.string(),
+    phase: CollectionPhaseSchema,
+    message: LocalizedMessageSchema.nullable(),
     percent: z.number().min(0).max(100),
     startedAt: z.string().datetime().nullable(),
+    updatedAt: z.string().datetime().nullable(),
     finishedAt: z.string().datetime().nullable(),
-    error: z.string().nullable(),
-    warnings: z.array(z.string()),
+    error: LocalizedMessageSchema.nullable(),
+    warnings: z.array(LocalizedMessageSchema),
     chartCount: z.number().int().nonnegative(),
     pagesFetched: z.number().int().nonnegative(),
+    datasetStatus: DatasetStatusSchema.nullable(),
 })
 
 export type CollectionState = z.infer<typeof CollectionStateSchema>
@@ -109,14 +148,18 @@ export const LoginStateSchema = z.object({
     pageUrl: z.string(),
     communityNickname: z.string().nullable(),
     djName: z.string().nullable(),
+    error: LocalizedMessageSchema.nullable(),
 })
 
 export type LoginState = z.infer<typeof LoginStateSchema>
 
 export const SettingsSchema = z.object({
     style: PlayStyleSchema,
-    levels: z.array(z.number().int().min(1).max(12)).min(1),
-    delayProfile: z.enum(['fast', 'normal', 'slow']),
+    levels: z
+        .array(z.number().int().min(LEVEL_MIN).max(LEVEL_MAX))
+        .min(1)
+        .refine((levels) => new Set(levels).size === levels.length),
+    delayProfile: z.enum(DELAY_PROFILE_NAMES),
 })
 
 export type Settings = z.infer<typeof SettingsSchema>

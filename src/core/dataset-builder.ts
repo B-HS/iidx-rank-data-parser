@@ -1,6 +1,9 @@
 import { DATASET_FORMAT, DATASET_SCHEMA_VERSION, DELAY_PROFILES, GAME_VERSION } from '@shared/constants'
+import { toMessage } from '@shared/message-keys'
+import type { LocalizedMessage } from '@shared/message-keys'
 import { ChartSchema, DatasetSchema, NotesRadarSchema, PlayerSchema } from '@shared/schema'
 import type { Chart, Dataset, NotesRadar, Player, Settings } from '@shared/schema'
+import { hasRadarValues } from '@core/collection-flow'
 
 type DatasetMetaInput = Pick<Dataset['meta'], 'pagesFetched' | 'failedLevels' | 'warnings'>
 
@@ -14,35 +17,45 @@ export type DatasetCandidate = {
     meta: Dataset['meta']
 }
 
-const resolveStatus = (chartCount: number, warnings: string[]): Dataset['meta']['status'] => {
+const resolveStatus = (chartCount: number, warnings: LocalizedMessage[]): Dataset['meta']['status'] => {
     if (warnings.length > 0) return 'partial'
 
     return chartCount === 0 ? 'empty' : 'complete'
 }
 
+const isPlayerMissing = (player: Player | null) => player === null || (player.djName === null && player.iidxId === null)
+
 /**
  * Salvages as much of a collection result as the schema allows.
  * Individual charts that fail validation are dropped instead of losing the
- * whole run, and the drop count is recorded as a warning.
+ * whole run. Dropped charts and missing player or notes radar data are
+ * recorded as warnings so an incomplete result is never reported as complete.
  * @param candidate - assembled dataset before schema validation
  */
 export const sanitizeDataset = (candidate: DatasetCandidate) => {
-    const player = PlayerSchema.safeParse(candidate.player)
-    const notesRadar = NotesRadarSchema.safeParse(candidate.notesRadar)
+    const parsedPlayer = PlayerSchema.safeParse(candidate.player)
+    const parsedRadar = NotesRadarSchema.safeParse(candidate.notesRadar)
+    const player = parsedPlayer.success ? parsedPlayer.data : null
+    const notesRadar = parsedRadar.success ? parsedRadar.data : null
     const charts = candidate.charts.flatMap((chart) => {
         const parsed = ChartSchema.safeParse(chart)
         return parsed.success ? [parsed.data] : []
     })
 
     const dropped = candidate.charts.length - charts.length
-    const warnings = dropped === 0 ? candidate.meta.warnings : [...candidate.meta.warnings, `${dropped}개 차트가 검증을 통과하지 못해 제외했습니다.`]
+    const warnings = [
+        ...candidate.meta.warnings,
+        ...(dropped === 0 ? [] : [toMessage('warning_charts_dropped', { count: dropped })]),
+        ...(isPlayerMissing(player) ? [toMessage('warning_player_missing')] : []),
+        ...(hasRadarValues(notesRadar) ? [] : [toMessage('warning_radar_missing')]),
+    ]
 
     return {
         format: candidate.format,
         schemaVersion: candidate.schemaVersion,
         gameVersion: candidate.gameVersion,
-        player: player.success ? player.data : null,
-        notesRadar: notesRadar.success ? notesRadar.data : null,
+        player,
+        notesRadar,
         charts,
         meta: { ...candidate.meta, status: resolveStatus(charts.length, warnings), warnings },
     }

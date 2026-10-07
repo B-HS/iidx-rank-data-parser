@@ -1,0 +1,567 @@
+{
+    "extName": {
+        "message": "IIDX Data Parser"
+    },
+    "extDescription": {
+        "message": "Collects your beatmania IIDX play data from e-amusement and reflects it to iidx-rank."
+    },
+    "progress_starting": {
+        "message": "Starting collection"
+    },
+    "progress_login": {
+        "message": "Checking the e-amusement login"
+    },
+    "progress_player": {
+        "message": "Reading DJ information"
+    },
+    "progress_radar": {
+        "message": "Reading NOTES RADAR"
+    },
+    "progress_charts": {
+        "message": "Collecting level $LEVEL$: page $PAGE$ (offset $OFFSET$)",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "page": {
+                "content": "$2"
+            },
+            "offset": {
+                "content": "$3"
+            }
+        }
+    },
+    "progress_saved": {
+        "message": "Saved $COUNT$ charts",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "progress_saved_partial": {
+        "message": "Collection was partial. Saved $COUNT$ charts",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "progress_saved_empty": {
+        "message": "No charts were collected"
+    },
+    "progress_cancelled": {
+        "message": "Collection was cancelled"
+    },
+    "progress_failed": {
+        "message": "Collection failed"
+    },
+    "error_unknown": {
+        "message": "An unknown error occurred"
+    },
+    "error_invalid_request": {
+        "message": "Invalid request"
+    },
+    "error_busy": {
+        "message": "Another operation is in progress"
+    },
+    "error_no_dataset": {
+        "message": "There is no saved data"
+    },
+    "error_interrupted": {
+        "message": "Collection was interrupted. The browser or extension may have restarted"
+    },
+    "error_tab_open_failed": {
+        "message": "Could not open a tab for collection"
+    },
+    "error_tab_closed": {
+        "message": "The collection tab was closed"
+    },
+    "error_load_timeout": {
+        "message": "The page took too long to load"
+    },
+    "error_no_response": {
+        "message": "The page did not respond"
+    },
+    "error_extract_failed": {
+        "message": "Could not read data from the page"
+    },
+    "error_url_mismatch": {
+        "message": "An unexpected page was opened"
+    },
+    "error_unexpected_page": {
+        "message": "The page has an unexpected structure"
+    },
+    "error_login_unreadable": {
+        "message": "Could not read the login state"
+    },
+    "error_not_logged_in": {
+        "message": "You are not logged in to e-amusement"
+    },
+    "error_session_expired": {
+        "message": "Your e-amusement login expired. Please log in again"
+    },
+    "error_repeated_failures": {
+        "message": "Collection stopped after repeated failures"
+    },
+    "error_all_levels_failed": {
+        "message": "Collection failed for every level"
+    },
+    "error_aborted": {
+        "message": "Collection was aborted"
+    },
+    "warning_page_no_response": {
+        "message": "Level $LEVEL$, offset $OFFSET$: the page did not respond",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_extract_failed": {
+        "message": "Level $LEVEL$, offset $OFFSET$: could not read data from the page",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_url_mismatch": {
+        "message": "Level $LEVEL$, offset $OFFSET$: an unexpected page was opened",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_unexpected_page": {
+        "message": "Level $LEVEL$, offset $OFFSET$: the page has an unexpected structure",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_rows_skipped": {
+        "message": "Level $LEVEL$, offset $OFFSET$: skipped $COUNT$ rows that could not be read",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            },
+            "count": {
+                "content": "$3"
+            }
+        }
+    },
+    "warning_level_first_page_empty": {
+        "message": "Level $LEVEL$: the first page has no songs",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_level_page_limit": {
+        "message": "Level $LEVEL$: reached the page limit ($LIMIT$); later pages were not collected",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "limit": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_aborted_tab_closed": {
+        "message": "The collection tab was closed; remaining levels were not collected: $LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_aborted_load_timeout": {
+        "message": "The page took too long to load; remaining levels were not collected: $LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_aborted_session_expired": {
+        "message": "The e-amusement login expired; remaining levels were not collected: $LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_aborted_repeated_failures": {
+        "message": "Repeated failures stopped collection; remaining levels were not collected: $LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_charts_dropped": {
+        "message": "Excluded $COUNT$ charts with an invalid format",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_player_missing": {
+        "message": "Could not read DJ information"
+    },
+    "warning_radar_missing": {
+        "message": "Could not read NOTES RADAR"
+    },
+    "delay_profile_fast": {
+        "message": "Fast"
+    },
+    "delay_profile_normal": {
+        "message": "Normal"
+    },
+    "delay_profile_slow": {
+        "message": "Slow"
+    },
+    "rank_reason_not_logged_in": {
+        "message": "Not reflected because you are not logged in to iidx-rank"
+    },
+    "rank_reason_dp_unsupported": {
+        "message": "DP data is not reflected to iidx-rank"
+    },
+    "rank_reason_no_data": {
+        "message": "There is no collected data to reflect"
+    },
+    "rank_reason_origin_rejected": {
+        "message": "The iidx-rank server did not allow requests from this extension. Check that the extension ID is registered on the server"
+    },
+    "rank_reason_rate_limited": {
+        "message": "Too many sync attempts in a short time. Please try again shortly"
+    },
+    "rank_reason_network": {
+        "message": "Could not connect to iidx-rank"
+    },
+    "rank_reason_server_error": {
+        "message": "The iidx-rank server returned an error"
+    },
+    "rank_reason_invalid_payload": {
+        "message": "The data to reflect is invalid or too large"
+    },
+    "popup_subtitle": {
+        "message": "beatmania IIDX 34 · e-amusement data collection"
+    },
+    "popup_loading": {
+        "message": "Loading..."
+    },
+    "popup_error_background_unreachable": {
+        "message": "The background worker is not responding. Reopen the popup or reload the extension at chrome://extensions"
+    },
+    "popup_error_invalid_response": {
+        "message": "The background worker returned an invalid response. Reload the extension"
+    },
+    "popup_status_unchecked": {
+        "message": "Not checked"
+    },
+    "popup_status_logged_in": {
+        "message": "Logged in"
+    },
+    "popup_status_logged_out": {
+        "message": "Login required"
+    },
+    "popup_status_check_failed": {
+        "message": "Check failed"
+    },
+    "popup_eamusement_title": {
+        "message": "e-amusement login"
+    },
+    "popup_eamusement_hint_unchecked": {
+        "message": "The login state has not been checked yet. Use the button below to check it."
+    },
+    "popup_eamusement_hint_logged_out": {
+        "message": "You need to log in to e-amusement in this browser to collect data. Log in, then check again."
+    },
+    "popup_eamusement_hint_failed": {
+        "message": "Could not check the login state. Please try again shortly."
+    },
+    "popup_label_community": {
+        "message": "Community"
+    },
+    "popup_label_checked_at": {
+        "message": "Checked at"
+    },
+    "popup_action_check_login": {
+        "message": "Check login"
+    },
+    "popup_rank_title": {
+        "message": "iidx-rank account"
+    },
+    "popup_rank_target": {
+        "message": "Target: $ORIGIN$",
+        "placeholders": {
+            "origin": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_rank_hint_unchecked": {
+        "message": "The iidx-rank login state has not been checked yet."
+    },
+    "popup_rank_hint_logged_out": {
+        "message": "Open the iidx-rank login page and log in, then reopen this popup or press Check again. Collected data is reflected to the account you log in with."
+    },
+    "popup_rank_hint_logged_in": {
+        "message": "Collected data is reflected to this account automatically when collection finishes."
+    },
+    "popup_rank_hint_network": {
+        "message": "Could not connect to iidx-rank. Check your network and try again."
+    },
+    "popup_rank_hint_server_error": {
+        "message": "The iidx-rank server returned an error. Please try again shortly."
+    },
+    "popup_label_name": {
+        "message": "Name"
+    },
+    "popup_label_handle": {
+        "message": "Handle"
+    },
+    "popup_action_open_rank_login": {
+        "message": "Open iidx-rank login"
+    },
+    "popup_action_recheck": {
+        "message": "Check again"
+    },
+    "popup_settings_title": {
+        "message": "Collection settings"
+    },
+    "popup_settings_style": {
+        "message": "Style"
+    },
+    "popup_settings_levels": {
+        "message": "Levels (multiple allowed)"
+    },
+    "popup_settings_delay": {
+        "message": "Request interval"
+    },
+    "popup_settings_note_scope": {
+        "message": "Only SP level 12 is reflected to iidx-rank. DP and other levels can be collected and exported, but are not reflected."
+    },
+    "popup_settings_warning_dp": {
+        "message": "With DP selected, data is collected but not reflected to iidx-rank."
+    },
+    "popup_action_start": {
+        "message": "Start collecting"
+    },
+    "popup_action_collecting": {
+        "message": "Collecting..."
+    },
+    "popup_reason_collecting": {
+        "message": "Not available while collecting."
+    },
+    "popup_reason_syncing": {
+        "message": "Not available while reflecting to iidx-rank."
+    },
+    "popup_reason_login_unchecked": {
+        "message": "Check the e-amusement login state first."
+    },
+    "popup_reason_login_failed": {
+        "message": "Cannot collect because the login state could not be checked. Check again."
+    },
+    "popup_reason_login_required": {
+        "message": "You must log in to e-amusement to collect."
+    },
+    "popup_reason_no_levels": {
+        "message": "Select at least one level."
+    },
+    "popup_reason_no_dataset": {
+        "message": "There is no saved data to reflect. Collect first."
+    },
+    "popup_reason_rank_login_required": {
+        "message": "You must log in to iidx-rank to reflect data."
+    },
+    "popup_progress_title": {
+        "message": "Collection progress"
+    },
+    "popup_progress_label": {
+        "message": "Collection progress"
+    },
+    "popup_progress_idle": {
+        "message": "Nothing has been collected yet."
+    },
+    "popup_collection_status_idle": {
+        "message": "Idle"
+    },
+    "popup_collection_status_running": {
+        "message": "Running"
+    },
+    "popup_collection_status_completed": {
+        "message": "Completed"
+    },
+    "popup_collection_status_failed": {
+        "message": "Failed"
+    },
+    "popup_collection_status_cancelled": {
+        "message": "Cancelled"
+    },
+    "popup_dataset_status_empty": {
+        "message": "Empty"
+    },
+    "popup_dataset_status_partial": {
+        "message": "Partial"
+    },
+    "popup_dataset_status_complete": {
+        "message": "Complete"
+    },
+    "popup_label_charts": {
+        "message": "Charts"
+    },
+    "popup_label_pages": {
+        "message": "Pages"
+    },
+    "popup_label_started": {
+        "message": "Started"
+    },
+    "popup_warnings_heading": {
+        "message": "$COUNT$ warnings",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_warnings_more": {
+        "message": "$COUNT$ more warnings are not shown.",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_action_cancel": {
+        "message": "Cancel collection"
+    },
+    "popup_dataset_title": {
+        "message": "Saved data"
+    },
+    "popup_dataset_empty": {
+        "message": "There is no saved data. Run a collection."
+    },
+    "popup_label_chart_count": {
+        "message": "Chart count"
+    },
+    "popup_label_generated": {
+        "message": "Generated at"
+    },
+    "popup_label_style": {
+        "message": "Style"
+    },
+    "popup_action_export_dataset": {
+        "message": "Export JSON"
+    },
+    "popup_action_export_rank": {
+        "message": "Export for iidx-rank"
+    },
+    "popup_action_clear": {
+        "message": "Delete saved data"
+    },
+    "popup_clear_confirm_message": {
+        "message": "This deletes the saved collection data. It cannot be undone."
+    },
+    "popup_action_clear_confirm": {
+        "message": "Confirm delete"
+    },
+    "popup_action_back": {
+        "message": "Cancel"
+    },
+    "popup_sync_title": {
+        "message": "Reflect to iidx-rank"
+    },
+    "popup_action_sync": {
+        "message": "Reflect to iidx-rank"
+    },
+    "popup_action_syncing": {
+        "message": "Reflecting..."
+    },
+    "popup_sync_none": {
+        "message": "Nothing has been reflected yet."
+    },
+    "popup_sync_status_success": {
+        "message": "Success"
+    },
+    "popup_sync_status_failed": {
+        "message": "Failed"
+    },
+    "popup_sync_status_skipped": {
+        "message": "Skipped"
+    },
+    "popup_sync_trigger_auto": {
+        "message": "Automatic (after collection)"
+    },
+    "popup_sync_trigger_manual": {
+        "message": "Manual"
+    },
+    "popup_label_sync_time": {
+        "message": "Last sync"
+    },
+    "popup_label_sync_trigger": {
+        "message": "Trigger"
+    },
+    "popup_label_sync_account": {
+        "message": "Account"
+    },
+    "popup_label_received": {
+        "message": "Sent charts"
+    },
+    "popup_label_matched": {
+        "message": "Matched charts"
+    },
+    "popup_label_changed": {
+        "message": "Changed records"
+    },
+    "popup_label_unmatched": {
+        "message": "Unmatched songs"
+    },
+    "popup_label_reason": {
+        "message": "Reason"
+    },
+    "popup_sync_unmatched_hint": {
+        "message": "Level 12 charts not found in the iidx-rank song list. The song titles may be written differently."
+    },
+    "popup_sync_unmatched_more": {
+        "message": "$COUNT$ more",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_sync_server_code": {
+        "message": "Server code: $CODE$",
+        "placeholders": {
+            "code": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_footer_note": {
+        "message": "Collection runs page by page in a new e-amusement tab. Data is stored only in this browser, and is reflected to iidx-rank right after collection when you are logged in."
+    }
+}

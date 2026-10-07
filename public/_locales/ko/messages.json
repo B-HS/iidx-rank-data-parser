@@ -1,0 +1,567 @@
+{
+    "extName": {
+        "message": "IIDX Data Parser"
+    },
+    "extDescription": {
+        "message": "e-amusement의 beatmania IIDX 플레이 데이터를 수집해 iidx-rank에 반영합니다."
+    },
+    "progress_starting": {
+        "message": "수집을 시작합니다"
+    },
+    "progress_login": {
+        "message": "e-amusement 로그인 상태를 확인하는 중"
+    },
+    "progress_player": {
+        "message": "DJ 정보를 읽는 중"
+    },
+    "progress_radar": {
+        "message": "NOTES RADAR를 읽는 중"
+    },
+    "progress_charts": {
+        "message": "레벨 $LEVEL$ 수집 중: $PAGE$페이지 (offset $OFFSET$)",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "page": {
+                "content": "$2"
+            },
+            "offset": {
+                "content": "$3"
+            }
+        }
+    },
+    "progress_saved": {
+        "message": "차트 $COUNT$개를 저장했습니다",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "progress_saved_partial": {
+        "message": "일부만 수집되었습니다. 차트 $COUNT$개를 저장했습니다",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "progress_saved_empty": {
+        "message": "수집된 차트가 없습니다"
+    },
+    "progress_cancelled": {
+        "message": "수집을 중단했습니다"
+    },
+    "progress_failed": {
+        "message": "수집에 실패했습니다"
+    },
+    "error_unknown": {
+        "message": "알 수 없는 오류가 발생했습니다"
+    },
+    "error_invalid_request": {
+        "message": "잘못된 요청입니다"
+    },
+    "error_busy": {
+        "message": "다른 작업이 진행 중입니다"
+    },
+    "error_no_dataset": {
+        "message": "저장된 데이터가 없습니다"
+    },
+    "error_interrupted": {
+        "message": "수집이 중단되었습니다. 브라우저나 익스텐션이 다시 시작되었을 수 있습니다"
+    },
+    "error_tab_open_failed": {
+        "message": "수집용 탭을 열지 못했습니다"
+    },
+    "error_tab_closed": {
+        "message": "수집 탭이 닫혔습니다"
+    },
+    "error_load_timeout": {
+        "message": "페이지 로딩 시간이 초과되었습니다"
+    },
+    "error_no_response": {
+        "message": "페이지에서 응답이 없습니다"
+    },
+    "error_extract_failed": {
+        "message": "페이지에서 데이터를 읽지 못했습니다"
+    },
+    "error_url_mismatch": {
+        "message": "예상과 다른 페이지가 열렸습니다"
+    },
+    "error_unexpected_page": {
+        "message": "예상하지 못한 페이지 구조입니다"
+    },
+    "error_login_unreadable": {
+        "message": "로그인 상태를 읽지 못했습니다"
+    },
+    "error_not_logged_in": {
+        "message": "e-amusement에 로그인되어 있지 않습니다"
+    },
+    "error_session_expired": {
+        "message": "e-amusement 로그인이 만료되었습니다. 다시 로그인해 주세요"
+    },
+    "error_repeated_failures": {
+        "message": "연속으로 실패하여 수집을 중단했습니다"
+    },
+    "error_all_levels_failed": {
+        "message": "모든 레벨의 수집에 실패했습니다"
+    },
+    "error_aborted": {
+        "message": "수집이 중단되었습니다"
+    },
+    "warning_page_no_response": {
+        "message": "레벨 $LEVEL$, offset $OFFSET$: 페이지에서 응답이 없었습니다",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_extract_failed": {
+        "message": "레벨 $LEVEL$, offset $OFFSET$: 데이터를 읽지 못했습니다",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_url_mismatch": {
+        "message": "레벨 $LEVEL$, offset $OFFSET$: 예상과 다른 페이지가 열렸습니다",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_unexpected_page": {
+        "message": "레벨 $LEVEL$, offset $OFFSET$: 예상하지 못한 페이지 구조입니다",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_rows_skipped": {
+        "message": "레벨 $LEVEL$, offset $OFFSET$: 읽지 못한 $COUNT$행을 건너뛰었습니다",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            },
+            "count": {
+                "content": "$3"
+            }
+        }
+    },
+    "warning_level_first_page_empty": {
+        "message": "레벨 $LEVEL$: 첫 페이지에 곡이 없습니다",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_level_page_limit": {
+        "message": "레벨 $LEVEL$: 페이지 상한($LIMIT$페이지)에 도달해 이후는 수집하지 못했습니다",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "limit": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_aborted_tab_closed": {
+        "message": "수집 탭이 닫혀 남은 레벨을 수집하지 못했습니다: $LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_aborted_load_timeout": {
+        "message": "페이지 로딩 시간이 초과되어 남은 레벨을 수집하지 못했습니다: $LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_aborted_session_expired": {
+        "message": "e-amusement 로그인이 만료되어 남은 레벨을 수집하지 못했습니다: $LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_aborted_repeated_failures": {
+        "message": "연속으로 실패하여 남은 레벨을 수집하지 못했습니다: $LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_charts_dropped": {
+        "message": "형식이 올바르지 않은 차트 $COUNT$개를 제외했습니다",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_player_missing": {
+        "message": "DJ 정보를 읽지 못했습니다"
+    },
+    "warning_radar_missing": {
+        "message": "NOTES RADAR를 읽지 못했습니다"
+    },
+    "delay_profile_fast": {
+        "message": "빠름"
+    },
+    "delay_profile_normal": {
+        "message": "보통"
+    },
+    "delay_profile_slow": {
+        "message": "느림"
+    },
+    "rank_reason_not_logged_in": {
+        "message": "iidx-rank에 로그인되어 있지 않아 반영하지 않았습니다"
+    },
+    "rank_reason_dp_unsupported": {
+        "message": "DP 데이터는 iidx-rank에 반영되지 않습니다"
+    },
+    "rank_reason_no_data": {
+        "message": "반영할 수집 데이터가 없습니다"
+    },
+    "rank_reason_origin_rejected": {
+        "message": "iidx-rank 서버가 이 익스텐션의 요청을 허용하지 않았습니다. 서버에 익스텐션 ID가 등록되어 있는지 확인해 주세요"
+    },
+    "rank_reason_rate_limited": {
+        "message": "짧은 시간에 반복해서 반영했습니다. 잠시 후 다시 시도해 주세요"
+    },
+    "rank_reason_network": {
+        "message": "iidx-rank에 연결하지 못했습니다"
+    },
+    "rank_reason_server_error": {
+        "message": "iidx-rank 서버에서 오류가 발생했습니다"
+    },
+    "rank_reason_invalid_payload": {
+        "message": "반영할 데이터의 형식이 올바르지 않거나 너무 큽니다"
+    },
+    "popup_subtitle": {
+        "message": "beatmania IIDX 34 · e-amusement 데이터 수집"
+    },
+    "popup_loading": {
+        "message": "불러오는 중..."
+    },
+    "popup_error_background_unreachable": {
+        "message": "백그라운드 작업이 응답하지 않습니다. 팝업을 다시 열거나 chrome://extensions에서 익스텐션을 다시 로드해 주세요"
+    },
+    "popup_error_invalid_response": {
+        "message": "백그라운드 작업의 응답 형식이 올바르지 않습니다. 익스텐션을 다시 로드해 주세요"
+    },
+    "popup_status_unchecked": {
+        "message": "미확인"
+    },
+    "popup_status_logged_in": {
+        "message": "로그인됨"
+    },
+    "popup_status_logged_out": {
+        "message": "로그인 필요"
+    },
+    "popup_status_check_failed": {
+        "message": "확인 실패"
+    },
+    "popup_eamusement_title": {
+        "message": "e-amusement 로그인"
+    },
+    "popup_eamusement_hint_unchecked": {
+        "message": "아직 로그인 상태를 확인하지 않았습니다. 아래 버튼으로 확인해 주세요."
+    },
+    "popup_eamusement_hint_logged_out": {
+        "message": "수집하려면 브라우저에서 e-amusement에 로그인해야 합니다. 로그인한 뒤 다시 확인해 주세요."
+    },
+    "popup_eamusement_hint_failed": {
+        "message": "로그인 상태를 확인하지 못했습니다. 잠시 후 다시 확인해 주세요."
+    },
+    "popup_label_community": {
+        "message": "커뮤니티"
+    },
+    "popup_label_checked_at": {
+        "message": "확인 시각"
+    },
+    "popup_action_check_login": {
+        "message": "로그인 확인"
+    },
+    "popup_rank_title": {
+        "message": "iidx-rank 계정"
+    },
+    "popup_rank_target": {
+        "message": "대상: $ORIGIN$",
+        "placeholders": {
+            "origin": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_rank_hint_unchecked": {
+        "message": "아직 iidx-rank 로그인 상태를 확인하지 않았습니다."
+    },
+    "popup_rank_hint_logged_out": {
+        "message": "iidx-rank 로그인 페이지를 열어 로그인한 뒤 이 팝업을 다시 열거나 다시 확인을 눌러 주세요. 수집한 데이터는 로그인한 계정에 반영됩니다."
+    },
+    "popup_rank_hint_logged_in": {
+        "message": "수집이 끝나면 이 계정에 자동으로 반영됩니다."
+    },
+    "popup_rank_hint_network": {
+        "message": "iidx-rank에 연결하지 못했습니다. 네트워크를 확인한 뒤 다시 확인해 주세요."
+    },
+    "popup_rank_hint_server_error": {
+        "message": "iidx-rank 서버에서 오류가 발생했습니다. 잠시 후 다시 확인해 주세요."
+    },
+    "popup_label_name": {
+        "message": "이름"
+    },
+    "popup_label_handle": {
+        "message": "핸들"
+    },
+    "popup_action_open_rank_login": {
+        "message": "iidx-rank 로그인 열기"
+    },
+    "popup_action_recheck": {
+        "message": "다시 확인"
+    },
+    "popup_settings_title": {
+        "message": "수집 설정"
+    },
+    "popup_settings_style": {
+        "message": "스타일"
+    },
+    "popup_settings_levels": {
+        "message": "레벨 (복수 선택)"
+    },
+    "popup_settings_delay": {
+        "message": "요청 간격"
+    },
+    "popup_settings_note_scope": {
+        "message": "iidx-rank에 반영되는 것은 SP 레벨 12뿐입니다. DP와 다른 레벨은 수집해 내보낼 수만 있고 iidx-rank에는 반영되지 않습니다."
+    },
+    "popup_settings_warning_dp": {
+        "message": "DP를 선택하면 수집은 되지만 iidx-rank에는 반영되지 않습니다."
+    },
+    "popup_action_start": {
+        "message": "데이터 수집 시작"
+    },
+    "popup_action_collecting": {
+        "message": "수집 중..."
+    },
+    "popup_reason_collecting": {
+        "message": "수집 중에는 사용할 수 없습니다."
+    },
+    "popup_reason_syncing": {
+        "message": "iidx-rank에 반영하는 중에는 사용할 수 없습니다."
+    },
+    "popup_reason_login_unchecked": {
+        "message": "먼저 e-amusement 로그인 상태를 확인해 주세요."
+    },
+    "popup_reason_login_failed": {
+        "message": "로그인 상태를 확인하지 못해 수집할 수 없습니다. 다시 확인해 주세요."
+    },
+    "popup_reason_login_required": {
+        "message": "e-amusement에 로그인해야 수집할 수 있습니다."
+    },
+    "popup_reason_no_levels": {
+        "message": "레벨을 하나 이상 선택해 주세요."
+    },
+    "popup_reason_no_dataset": {
+        "message": "반영할 저장 데이터가 없습니다. 먼저 수집해 주세요."
+    },
+    "popup_reason_rank_login_required": {
+        "message": "iidx-rank에 로그인해야 반영할 수 있습니다."
+    },
+    "popup_progress_title": {
+        "message": "수집 진행"
+    },
+    "popup_progress_label": {
+        "message": "수집 진행률"
+    },
+    "popup_progress_idle": {
+        "message": "아직 수집하지 않았습니다."
+    },
+    "popup_collection_status_idle": {
+        "message": "대기"
+    },
+    "popup_collection_status_running": {
+        "message": "진행 중"
+    },
+    "popup_collection_status_completed": {
+        "message": "완료"
+    },
+    "popup_collection_status_failed": {
+        "message": "실패"
+    },
+    "popup_collection_status_cancelled": {
+        "message": "중단됨"
+    },
+    "popup_dataset_status_empty": {
+        "message": "비어 있음"
+    },
+    "popup_dataset_status_partial": {
+        "message": "일부만 수집됨"
+    },
+    "popup_dataset_status_complete": {
+        "message": "전부 수집됨"
+    },
+    "popup_label_charts": {
+        "message": "차트"
+    },
+    "popup_label_pages": {
+        "message": "페이지"
+    },
+    "popup_label_started": {
+        "message": "시작"
+    },
+    "popup_warnings_heading": {
+        "message": "경고 $COUNT$건",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_warnings_more": {
+        "message": "그 외 $COUNT$건의 경고는 표시하지 않았습니다.",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_action_cancel": {
+        "message": "수집 중단"
+    },
+    "popup_dataset_title": {
+        "message": "저장된 데이터"
+    },
+    "popup_dataset_empty": {
+        "message": "저장된 데이터가 없습니다. 수집을 실행해 주세요."
+    },
+    "popup_label_chart_count": {
+        "message": "차트 수"
+    },
+    "popup_label_generated": {
+        "message": "생성 시각"
+    },
+    "popup_label_style": {
+        "message": "스타일"
+    },
+    "popup_action_export_dataset": {
+        "message": "JSON 내보내기"
+    },
+    "popup_action_export_rank": {
+        "message": "iidx-rank용 내보내기"
+    },
+    "popup_action_clear": {
+        "message": "저장 데이터 삭제"
+    },
+    "popup_clear_confirm_message": {
+        "message": "저장된 수집 데이터를 삭제합니다. 되돌릴 수 없습니다."
+    },
+    "popup_action_clear_confirm": {
+        "message": "삭제 확인"
+    },
+    "popup_action_back": {
+        "message": "취소"
+    },
+    "popup_sync_title": {
+        "message": "iidx-rank에 반영"
+    },
+    "popup_action_sync": {
+        "message": "iidx-rank에 반영"
+    },
+    "popup_action_syncing": {
+        "message": "반영 중..."
+    },
+    "popup_sync_none": {
+        "message": "아직 반영한 기록이 없습니다."
+    },
+    "popup_sync_status_success": {
+        "message": "반영 성공"
+    },
+    "popup_sync_status_failed": {
+        "message": "반영 실패"
+    },
+    "popup_sync_status_skipped": {
+        "message": "반영 건너뜀"
+    },
+    "popup_sync_trigger_auto": {
+        "message": "자동 (수집 직후)"
+    },
+    "popup_sync_trigger_manual": {
+        "message": "수동"
+    },
+    "popup_label_sync_time": {
+        "message": "마지막 반영"
+    },
+    "popup_label_sync_trigger": {
+        "message": "방식"
+    },
+    "popup_label_sync_account": {
+        "message": "계정"
+    },
+    "popup_label_received": {
+        "message": "전송한 차트"
+    },
+    "popup_label_matched": {
+        "message": "일치한 차트"
+    },
+    "popup_label_changed": {
+        "message": "변경된 기록"
+    },
+    "popup_label_unmatched": {
+        "message": "일치하지 않은 곡"
+    },
+    "popup_label_reason": {
+        "message": "사유"
+    },
+    "popup_sync_unmatched_hint": {
+        "message": "iidx-rank의 곡 목록에서 찾지 못한 레벨 12 차트입니다. 곡명 표기 차이일 수 있습니다."
+    },
+    "popup_sync_unmatched_more": {
+        "message": "외 $COUNT$곡",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_sync_server_code": {
+        "message": "서버 코드: $CODE$",
+        "placeholders": {
+            "code": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_footer_note": {
+        "message": "수집은 새 e-amusement 탭에서 순차로 진행됩니다. 수집한 데이터는 이 브라우저에만 저장되며, iidx-rank에 로그인되어 있으면 수집 직후 자동으로 반영됩니다."
+    }
+}

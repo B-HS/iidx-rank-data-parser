@@ -1,0 +1,567 @@
+{
+    "extName": {
+        "message": "IIDX Data Parser"
+    },
+    "extDescription": {
+        "message": "e-amusementのbeatmania IIDXプレーデータを収集し、iidx-rankに反映します。"
+    },
+    "progress_starting": {
+        "message": "収集を開始します"
+    },
+    "progress_login": {
+        "message": "e-amusementのログイン状態を確認中"
+    },
+    "progress_player": {
+        "message": "DJ情報を読み取り中"
+    },
+    "progress_radar": {
+        "message": "NOTES RADARを読み取り中"
+    },
+    "progress_charts": {
+        "message": "レベル$LEVEL$を収集中：$PAGE$ページ目（offset $OFFSET$）",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "page": {
+                "content": "$2"
+            },
+            "offset": {
+                "content": "$3"
+            }
+        }
+    },
+    "progress_saved": {
+        "message": "$COUNT$件の譜面を保存しました",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "progress_saved_partial": {
+        "message": "一部のみ収集されました。$COUNT$件の譜面を保存しました",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "progress_saved_empty": {
+        "message": "収集された譜面がありません"
+    },
+    "progress_cancelled": {
+        "message": "収集を中断しました"
+    },
+    "progress_failed": {
+        "message": "収集に失敗しました"
+    },
+    "error_unknown": {
+        "message": "不明なエラーが発生しました"
+    },
+    "error_invalid_request": {
+        "message": "無効なリクエストです"
+    },
+    "error_busy": {
+        "message": "別の処理が実行中です"
+    },
+    "error_no_dataset": {
+        "message": "保存されたデータがありません"
+    },
+    "error_interrupted": {
+        "message": "収集が中断されました。ブラウザまたは拡張機能が再起動された可能性があります"
+    },
+    "error_tab_open_failed": {
+        "message": "収集用のタブを開けませんでした"
+    },
+    "error_tab_closed": {
+        "message": "収集タブが閉じられました"
+    },
+    "error_load_timeout": {
+        "message": "ページの読み込みがタイムアウトしました"
+    },
+    "error_no_response": {
+        "message": "ページから応答がありません"
+    },
+    "error_extract_failed": {
+        "message": "ページからデータを読み取れませんでした"
+    },
+    "error_url_mismatch": {
+        "message": "想定と異なるページが開かれました"
+    },
+    "error_unexpected_page": {
+        "message": "想定外のページ構造です"
+    },
+    "error_login_unreadable": {
+        "message": "ログイン状態を読み取れませんでした"
+    },
+    "error_not_logged_in": {
+        "message": "e-amusementにログインしていません"
+    },
+    "error_session_expired": {
+        "message": "e-amusementのログインの有効期限が切れました。再度ログインしてください"
+    },
+    "error_repeated_failures": {
+        "message": "連続で失敗したため収集を中止しました"
+    },
+    "error_all_levels_failed": {
+        "message": "すべてのレベルの収集に失敗しました"
+    },
+    "error_aborted": {
+        "message": "収集が中断されました"
+    },
+    "warning_page_no_response": {
+        "message": "レベル$LEVEL$、offset $OFFSET$：ページから応答がありませんでした",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_extract_failed": {
+        "message": "レベル$LEVEL$、offset $OFFSET$：データを読み取れませんでした",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_url_mismatch": {
+        "message": "レベル$LEVEL$、offset $OFFSET$：想定と異なるページが開かれました",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_unexpected_page": {
+        "message": "レベル$LEVEL$、offset $OFFSET$：想定外のページ構造です",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_page_rows_skipped": {
+        "message": "レベル$LEVEL$、offset $OFFSET$：読み取れなかった$COUNT$行をスキップしました",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "offset": {
+                "content": "$2"
+            },
+            "count": {
+                "content": "$3"
+            }
+        }
+    },
+    "warning_level_first_page_empty": {
+        "message": "レベル$LEVEL$：最初のページに曲がありません",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_level_page_limit": {
+        "message": "レベル$LEVEL$：ページ上限（$LIMIT$ページ）に達したため、以降は収集できませんでした",
+        "placeholders": {
+            "level": {
+                "content": "$1"
+            },
+            "limit": {
+                "content": "$2"
+            }
+        }
+    },
+    "warning_aborted_tab_closed": {
+        "message": "収集タブが閉じられたため、残りのレベルを収集できませんでした：$LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_aborted_load_timeout": {
+        "message": "ページの読み込みがタイムアウトしたため、残りのレベルを収集できませんでした：$LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_aborted_session_expired": {
+        "message": "e-amusementのログインの有効期限が切れたため、残りのレベルを収集できませんでした：$LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_aborted_repeated_failures": {
+        "message": "連続で失敗したため、残りのレベルを収集できませんでした：$LEVELS$",
+        "placeholders": {
+            "levels": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_charts_dropped": {
+        "message": "形式が正しくない譜面$COUNT$件を除外しました",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "warning_player_missing": {
+        "message": "DJ情報を読み取れませんでした"
+    },
+    "warning_radar_missing": {
+        "message": "NOTES RADARを読み取れませんでした"
+    },
+    "delay_profile_fast": {
+        "message": "速い"
+    },
+    "delay_profile_normal": {
+        "message": "普通"
+    },
+    "delay_profile_slow": {
+        "message": "ゆっくり"
+    },
+    "rank_reason_not_logged_in": {
+        "message": "iidx-rankにログインしていないため反映しませんでした"
+    },
+    "rank_reason_dp_unsupported": {
+        "message": "DPデータはiidx-rankに反映されません"
+    },
+    "rank_reason_no_data": {
+        "message": "反映する収集データがありません"
+    },
+    "rank_reason_origin_rejected": {
+        "message": "iidx-rankサーバーがこの拡張機能のリクエストを許可しませんでした。サーバーに拡張機能IDが登録されているか確認してください"
+    },
+    "rank_reason_rate_limited": {
+        "message": "短時間に繰り返し反映しました。しばらくしてからもう一度お試しください"
+    },
+    "rank_reason_network": {
+        "message": "iidx-rankに接続できませんでした"
+    },
+    "rank_reason_server_error": {
+        "message": "iidx-rankサーバーでエラーが発生しました"
+    },
+    "rank_reason_invalid_payload": {
+        "message": "反映するデータの形式が正しくないか、大きすぎます"
+    },
+    "popup_subtitle": {
+        "message": "beatmania IIDX 34 · e-amusementデータ収集"
+    },
+    "popup_loading": {
+        "message": "読み込み中..."
+    },
+    "popup_error_background_unreachable": {
+        "message": "バックグラウンド処理が応答しません。ポップアップを開き直すか、chrome://extensionsで拡張機能を再読み込みしてください"
+    },
+    "popup_error_invalid_response": {
+        "message": "バックグラウンド処理の応答形式が正しくありません。拡張機能を再読み込みしてください"
+    },
+    "popup_status_unchecked": {
+        "message": "未確認"
+    },
+    "popup_status_logged_in": {
+        "message": "ログイン済み"
+    },
+    "popup_status_logged_out": {
+        "message": "ログインが必要"
+    },
+    "popup_status_check_failed": {
+        "message": "確認に失敗"
+    },
+    "popup_eamusement_title": {
+        "message": "e-amusementログイン"
+    },
+    "popup_eamusement_hint_unchecked": {
+        "message": "ログイン状態をまだ確認していません。下のボタンで確認してください。"
+    },
+    "popup_eamusement_hint_logged_out": {
+        "message": "収集するには、ブラウザでe-amusementにログインする必要があります。ログイン後にもう一度確認してください。"
+    },
+    "popup_eamusement_hint_failed": {
+        "message": "ログイン状態を確認できませんでした。しばらくしてからもう一度確認してください。"
+    },
+    "popup_label_community": {
+        "message": "コミュニティ"
+    },
+    "popup_label_checked_at": {
+        "message": "確認日時"
+    },
+    "popup_action_check_login": {
+        "message": "ログインを確認"
+    },
+    "popup_rank_title": {
+        "message": "iidx-rankアカウント"
+    },
+    "popup_rank_target": {
+        "message": "接続先：$ORIGIN$",
+        "placeholders": {
+            "origin": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_rank_hint_unchecked": {
+        "message": "iidx-rankのログイン状態をまだ確認していません。"
+    },
+    "popup_rank_hint_logged_out": {
+        "message": "iidx-rankのログインページを開いてログインし、このポップアップを開き直すか「再確認」を押してください。収集したデータはログインしたアカウントに反映されます。"
+    },
+    "popup_rank_hint_logged_in": {
+        "message": "収集が終わると、このアカウントに自動で反映されます。"
+    },
+    "popup_rank_hint_network": {
+        "message": "iidx-rankに接続できませんでした。ネットワークを確認してから再確認してください。"
+    },
+    "popup_rank_hint_server_error": {
+        "message": "iidx-rankサーバーでエラーが発生しました。しばらくしてから再確認してください。"
+    },
+    "popup_label_name": {
+        "message": "名前"
+    },
+    "popup_label_handle": {
+        "message": "ハンドル"
+    },
+    "popup_action_open_rank_login": {
+        "message": "iidx-rankのログインを開く"
+    },
+    "popup_action_recheck": {
+        "message": "再確認"
+    },
+    "popup_settings_title": {
+        "message": "収集設定"
+    },
+    "popup_settings_style": {
+        "message": "スタイル"
+    },
+    "popup_settings_levels": {
+        "message": "レベル（複数選択可）"
+    },
+    "popup_settings_delay": {
+        "message": "リクエスト間隔"
+    },
+    "popup_settings_note_scope": {
+        "message": "iidx-rankに反映されるのはSPレベル12のみです。DPやその他のレベルは収集して書き出せますが、iidx-rankには反映されません。"
+    },
+    "popup_settings_warning_dp": {
+        "message": "DPを選ぶと収集はできますが、iidx-rankには反映されません。"
+    },
+    "popup_action_start": {
+        "message": "データ収集を開始"
+    },
+    "popup_action_collecting": {
+        "message": "収集中..."
+    },
+    "popup_reason_collecting": {
+        "message": "収集中は使用できません。"
+    },
+    "popup_reason_syncing": {
+        "message": "iidx-rankへの反映中は使用できません。"
+    },
+    "popup_reason_login_unchecked": {
+        "message": "まずe-amusementのログイン状態を確認してください。"
+    },
+    "popup_reason_login_failed": {
+        "message": "ログイン状態を確認できないため収集できません。再確認してください。"
+    },
+    "popup_reason_login_required": {
+        "message": "e-amusementにログインしないと収集できません。"
+    },
+    "popup_reason_no_levels": {
+        "message": "レベルを1つ以上選んでください。"
+    },
+    "popup_reason_no_dataset": {
+        "message": "反映する保存データがありません。先に収集してください。"
+    },
+    "popup_reason_rank_login_required": {
+        "message": "iidx-rankにログインしないと反映できません。"
+    },
+    "popup_progress_title": {
+        "message": "収集の進行状況"
+    },
+    "popup_progress_label": {
+        "message": "収集の進捗率"
+    },
+    "popup_progress_idle": {
+        "message": "まだ収集していません。"
+    },
+    "popup_collection_status_idle": {
+        "message": "待機"
+    },
+    "popup_collection_status_running": {
+        "message": "実行中"
+    },
+    "popup_collection_status_completed": {
+        "message": "完了"
+    },
+    "popup_collection_status_failed": {
+        "message": "失敗"
+    },
+    "popup_collection_status_cancelled": {
+        "message": "中断"
+    },
+    "popup_dataset_status_empty": {
+        "message": "空"
+    },
+    "popup_dataset_status_partial": {
+        "message": "一部のみ収集"
+    },
+    "popup_dataset_status_complete": {
+        "message": "収集完了"
+    },
+    "popup_label_charts": {
+        "message": "譜面"
+    },
+    "popup_label_pages": {
+        "message": "ページ"
+    },
+    "popup_label_started": {
+        "message": "開始"
+    },
+    "popup_warnings_heading": {
+        "message": "警告$COUNT$件",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_warnings_more": {
+        "message": "ほかの$COUNT$件の警告は表示していません。",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_action_cancel": {
+        "message": "収集を中断"
+    },
+    "popup_dataset_title": {
+        "message": "保存済みデータ"
+    },
+    "popup_dataset_empty": {
+        "message": "保存されたデータがありません。収集を実行してください。"
+    },
+    "popup_label_chart_count": {
+        "message": "譜面数"
+    },
+    "popup_label_generated": {
+        "message": "作成日時"
+    },
+    "popup_label_style": {
+        "message": "スタイル"
+    },
+    "popup_action_export_dataset": {
+        "message": "JSONを書き出し"
+    },
+    "popup_action_export_rank": {
+        "message": "iidx-rank用に書き出し"
+    },
+    "popup_action_clear": {
+        "message": "保存データを削除"
+    },
+    "popup_clear_confirm_message": {
+        "message": "保存された収集データを削除します。元に戻せません。"
+    },
+    "popup_action_clear_confirm": {
+        "message": "削除する"
+    },
+    "popup_action_back": {
+        "message": "キャンセル"
+    },
+    "popup_sync_title": {
+        "message": "iidx-rankに反映"
+    },
+    "popup_action_sync": {
+        "message": "iidx-rankに反映"
+    },
+    "popup_action_syncing": {
+        "message": "反映中..."
+    },
+    "popup_sync_none": {
+        "message": "まだ反映した記録がありません。"
+    },
+    "popup_sync_status_success": {
+        "message": "反映成功"
+    },
+    "popup_sync_status_failed": {
+        "message": "反映失敗"
+    },
+    "popup_sync_status_skipped": {
+        "message": "反映をスキップ"
+    },
+    "popup_sync_trigger_auto": {
+        "message": "自動（収集直後）"
+    },
+    "popup_sync_trigger_manual": {
+        "message": "手動"
+    },
+    "popup_label_sync_time": {
+        "message": "最終反映"
+    },
+    "popup_label_sync_trigger": {
+        "message": "方式"
+    },
+    "popup_label_sync_account": {
+        "message": "アカウント"
+    },
+    "popup_label_received": {
+        "message": "送信した譜面"
+    },
+    "popup_label_matched": {
+        "message": "一致した譜面"
+    },
+    "popup_label_changed": {
+        "message": "変更された記録"
+    },
+    "popup_label_unmatched": {
+        "message": "一致しなかった曲"
+    },
+    "popup_label_reason": {
+        "message": "理由"
+    },
+    "popup_sync_unmatched_hint": {
+        "message": "iidx-rankの曲リストで見つからなかったレベル12の譜面です。曲名の表記の違いかもしれません。"
+    },
+    "popup_sync_unmatched_more": {
+        "message": "ほか$COUNT$曲",
+        "placeholders": {
+            "count": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_sync_server_code": {
+        "message": "サーバーコード：$CODE$",
+        "placeholders": {
+            "code": {
+                "content": "$1"
+            }
+        }
+    },
+    "popup_footer_note": {
+        "message": "収集は新しいe-amusementタブで順番に行われます。収集したデータはこのブラウザにのみ保存され、iidx-rankにログインしていれば収集直後に自動で反映されます。"
+    }
+}

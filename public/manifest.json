@@ -1,6 +1,7 @@
 {
-    "name": "iidx-data-parser",
-    "description": "beatmania IIDX e-amusement DJ data parser for iidx-rank",
+    "name": "__MSG_extName__",
+    "description": "__MSG_extDescription__",
+    "default_locale": "en",
     "version": "0.1.0",
     "manifest_version": 3,
     "icons": {
@@ -10,10 +11,10 @@
         "128": "icons/icon128.png"
     },
     "action": {
-        "default_title": "IIDX Data Parser",
+        "default_title": "__MSG_extName__",
         "default_popup": "popup/index.html"
     },
-    "permissions": ["storage", "unlimitedStorage", "tabs", "scripting", "downloads"],
+    "permissions": ["storage", "unlimitedStorage", "tabs"],
     "host_permissions": ["https://p.eagate.573.jp/*"],
     "background": {
         "service_worker": "background/index.js",

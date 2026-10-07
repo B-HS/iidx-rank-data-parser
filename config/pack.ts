@@ -1,12 +1,13 @@
 import { $ } from 'bun'
 import AdmZip from 'adm-zip'
+import packageJson from '../package.json'
 import manifest from '../public/manifest.json'
 
 import './cwd'
 
 await $`bun run ./config/build.ts`
 
-const packName = manifest.name.toLowerCase().replace(/[\s\W]+/g, '-')
+const packName = packageJson.name.toLowerCase().replace(/[\s\W]+/g, '-')
 const { version } = manifest
 
 const folderToCompress = './build'

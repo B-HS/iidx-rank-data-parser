@@ -2,13 +2,15 @@ import { cn } from '@shared/cn'
 
 type ProgressProps = {
     value: number
+    label: string
     className?: string
 }
 
-export const Progress = ({ value, className }: ProgressProps) => (
+export const Progress = ({ value, label, className }: ProgressProps) => (
     <div
         className={cn('relative h-2 w-full overflow-hidden rounded-full bg-secondary', className)}
         role='progressbar'
+        aria-label={label}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(value)}>

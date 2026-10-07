@@ -64,3 +64,9 @@
             -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', 'Noto Sans KR', 'Helvetica Neue', Arial, sans-serif;
     }
 }
+
+@layer base {
+    html {
+        scrollbar-gutter: stable;
+    }
+}

@@ -1,64 +1,99 @@
-import type { CollectionState, Dataset, LoginState, Settings } from '@shared/schema'
+import { z } from 'zod'
+import { EXTRACT_FAILURES } from '@shared/domain'
+import { LocalizedMessageSchema } from '@shared/message-keys'
+import { RankOverviewSchema } from '@shared/rank-schema'
+import {
+    ChartSchema,
+    CollectionStateSchema,
+    DatasetStatusSchema,
+    DifficultyPageSchema,
+    LoginPageSchema,
+    LoginStateSchema,
+    NotesRadarSchema,
+    PlayStyleSchema,
+    PlayerSchema,
+    SettingsSchema,
+} from '@shared/schema'
 
-export const EXTRACT_KINDS = ['LOGIN', 'STATUS', 'RADAR', 'DIFFICULTY'] as const
+const EXTRACT_TYPE = 'EXTRACT'
 
-export type ExtractKind = (typeof EXTRACT_KINDS)[number]
+export const ExtractRequestSchema = z.discriminatedUnion('kind', [
+    z.object({ type: z.literal(EXTRACT_TYPE), kind: z.literal('LOGIN') }),
+    z.object({ type: z.literal(EXTRACT_TYPE), kind: z.literal('STATUS') }),
+    z.object({ type: z.literal(EXTRACT_TYPE), kind: z.literal('RADAR') }),
+    z.object({ type: z.literal(EXTRACT_TYPE), kind: z.literal('DIFFICULTY'), level: ChartSchema.shape.level, style: PlayStyleSchema }),
+])
 
-export type ExtractRequest = {
-    type: 'EXTRACT'
-    kind: ExtractKind
-    level?: number
-    style?: 0 | 1
-}
+export type ExtractRequest = z.infer<typeof ExtractRequestSchema>
+export type ExtractKind = ExtractRequest['kind']
 
-export type ExtractPayload = {
-    url: string
-    login: { isLoggedIn: boolean; communityNickname: string | null; djName: string | null } | null
-    status: unknown
-    radar: unknown
-    difficulty: { charts: unknown[]; isNoData: boolean; requiresLogin: boolean } | null
-}
+export const ExtractEnvelopeSchema = z.object({ type: z.literal(EXTRACT_TYPE) })
 
-export type ExtractResponse = { ok: true; payload: ExtractPayload } | { ok: false; error: string }
+export const ExtractResponseSchema = z.discriminatedUnion('kind', [
+    z.object({ ok: z.literal(true), kind: z.literal('LOGIN'), url: z.string(), login: LoginPageSchema }),
+    z.object({
+        ok: z.literal(true),
+        kind: z.literal('STATUS'),
+        url: z.string(),
+        requiresLogin: z.boolean(),
+        player: PlayerSchema.nullable().catch(null),
+        notesRadar: NotesRadarSchema.nullable().catch(null),
+    }),
+    z.object({ ok: z.literal(true), kind: z.literal('RADAR'), url: z.string(), notesRadar: NotesRadarSchema.nullable().catch(null) }),
+    z.object({ ok: z.literal(true), kind: z.literal('DIFFICULTY'), url: z.string(), difficulty: DifficultyPageSchema }),
+    z.object({ ok: z.literal(false), kind: z.literal('ERROR'), reason: z.enum(EXTRACT_FAILURES) }),
+])
 
-export const BACKGROUND_REQUESTS = [
-    'GET_OVERVIEW',
-    'CHECK_LOGIN',
-    'START_COLLECTION',
-    'CANCEL_COLLECTION',
-    'CLEAR_DATA',
-    'UPDATE_SETTINGS',
-    'EXPORT_DATASET',
-    'EXPORT_RANK_IMPORT',
-] as const
+export type ExtractResponse = z.infer<typeof ExtractResponseSchema>
+export type ExtractSuccess = Extract<ExtractResponse, { ok: true }>
 
-export type BackgroundRequestType = (typeof BACKGROUND_REQUESTS)[number]
+export const BackgroundRequestSchema = z.discriminatedUnion('type', [
+    z.object({ type: z.literal('GET_OVERVIEW') }),
+    z.object({ type: z.literal('CHECK_LOGIN') }),
+    z.object({ type: z.literal('START_COLLECTION'), settings: SettingsSchema }),
+    z.object({ type: z.literal('CANCEL_COLLECTION') }),
+    z.object({ type: z.literal('CLEAR_DATA') }),
+    z.object({ type: z.literal('UPDATE_SETTINGS'), settings: SettingsSchema }),
+    z.object({ type: z.literal('EXPORT_DATASET') }),
+    z.object({ type: z.literal('EXPORT_RANK_IMPORT') }),
+    z.object({ type: z.literal('CHECK_RANK_SESSION') }),
+    z.object({ type: z.literal('SYNC_RANK') }),
+    z.object({ type: z.literal('OPEN_RANK_LOGIN') }),
+])
 
-export type Overview = {
-    login: LoginState | null
-    collection: CollectionState
-    settings: Settings
-    dataset: {
-        status: Dataset['meta']['status']
-        chartCount: number
-        generatedAt: string | null
-        djName: string | null
-        notesRadar: Dataset['notesRadar']
-    } | null
-}
+export type BackgroundRequest = z.infer<typeof BackgroundRequestSchema>
+export type BackgroundRequestType = BackgroundRequest['type']
 
-export type BackgroundRequest =
-    | { type: 'GET_OVERVIEW' }
-    | { type: 'CHECK_LOGIN' }
-    | { type: 'START_COLLECTION'; settings: Settings }
-    | { type: 'CANCEL_COLLECTION' }
-    | { type: 'CLEAR_DATA' }
-    | { type: 'UPDATE_SETTINGS'; settings: Settings }
-    | { type: 'EXPORT_DATASET' }
-    | { type: 'EXPORT_RANK_IMPORT' }
+export const BackgroundEnvelopeSchema = z.object({ type: z.string() })
 
-export type BackgroundResponse =
-    | { ok: true; data: Overview }
-    | { ok: true; data: { download: { filename: string; content: string } } }
-    | { ok: true; data: null }
-    | { ok: false; error: string }
+export const OverviewSchema = z.object({
+    login: LoginStateSchema.nullable(),
+    collection: CollectionStateSchema,
+    settings: SettingsSchema,
+    dataset: z
+        .object({
+            status: DatasetStatusSchema,
+            chartCount: z.number().int().nonnegative(),
+            generatedAt: z.string().datetime().nullable(),
+            style: PlayStyleSchema,
+            djName: z.string().nullable(),
+            notesRadar: NotesRadarSchema.nullable(),
+        })
+        .nullable(),
+    rank: RankOverviewSchema,
+})
+
+export type Overview = z.infer<typeof OverviewSchema>
+
+export const DownloadSchema = z.object({
+    download: z.object({ filename: z.string(), content: z.string() }),
+})
+
+export type Download = z.infer<typeof DownloadSchema>
+
+export const BackgroundResponseSchema = z.union([
+    z.object({ ok: z.literal(true), data: z.union([OverviewSchema, DownloadSchema, z.null()]) }),
+    z.object({ ok: z.literal(false), error: LocalizedMessageSchema }),
+])
+
+export type BackgroundResponse = z.infer<typeof BackgroundResponseSchema>
