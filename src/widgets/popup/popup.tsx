@@ -11,7 +11,7 @@ import { SavedDatasetCard } from '@features/saved-dataset-card/saved-dataset-car
 import { t } from '@shared/i18n'
 import type { TranslatableMessage } from '@shared/i18n'
 import { BackgroundResponseSchema } from '@shared/messages'
-import type { BackgroundRequest, Download, Overview } from '@shared/messages'
+import type { BackgroundRequest, BackgroundResponse, Download, Overview } from '@shared/messages'
 import { RANK_IMPORT_STYLE } from '@shared/rank-schema'
 import { DEFAULT_SETTINGS } from '@shared/schema'
 import type { Settings } from '@shared/schema'
@@ -22,7 +22,9 @@ const STORAGE_KEY_PREFIX = 'iidx:'
 const GET_OVERVIEW_REQUEST = { type: 'GET_OVERVIEW' } as const satisfies BackgroundRequest
 const CHECK_RANK_SESSION_REQUEST = { type: 'CHECK_RANK_SESSION' } as const satisfies BackgroundRequest
 
-type SendResult = { ok: true; data: Overview | Download | null } | { ok: false; error: TranslatableMessage }
+type SendData = Extract<BackgroundResponse, { ok: true }>['data']
+
+type SendResult = { ok: true; data: SendData } | { ok: false; error: TranslatableMessage }
 
 const UNREACHABLE_RESULT = { ok: false, error: { key: 'popup_error_background_unreachable', params: [] } } as const satisfies SendResult
 const INVALID_RESULT = { ok: false, error: { key: 'popup_error_invalid_response', params: [] } } as const satisfies SendResult
@@ -46,9 +48,9 @@ const send = async (request: BackgroundRequest): Promise<SendResult> => {
     }
 }
 
-const overviewOf = (data: Overview | Download | null) => (data !== null && 'collection' in data ? data : null)
+const overviewOf = (data: SendData) => (data !== null && 'collection' in data ? data : null)
 
-const downloadOf = (data: Overview | Download | null) => (data !== null && 'download' in data ? data.download : null)
+const downloadOf = (data: SendData) => (data !== null && 'download' in data ? data.download : null)
 
 const triggerDownload = ({ filename, content }: Download['download']) => {
     const url = URL.createObjectURL(new Blob([content], { type: 'application/json' }))
@@ -82,9 +84,6 @@ const getSyncBlockReason = (overview: Overview) => {
     if (overview.collection.status === 'running') return t('popup_reason_collecting')
     if (overview.dataset === null) return t('popup_reason_no_dataset')
     if (overview.dataset.style !== RANK_IMPORT_STYLE) return t('rank_reason_dp_unsupported')
-
-    const session = overview.rank.session
-    if (session !== null && session.error === null && session.user === null) return t('popup_reason_rank_login_required')
 
     return null
 }

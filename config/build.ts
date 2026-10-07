@@ -11,8 +11,9 @@ const manifestFile = 'manifest.json'
 const localesFolder = '_locales'
 
 const rankOrigin = normalizeRankOrigin(process.env.RANK_ORIGIN)
+const builtManifest = buildManifest(rankOrigin)
 
-const contentScripts = manifest.content_scripts.flatMap((script) => script.js)
+const contentScripts = builtManifest.content_scripts.flatMap((script) => script.js)
 const backgroundScripts = [...(manifest.background?.service_worker ? [manifest.background.service_worker] : [])]
 const entrypoints = [...contentScripts, ...backgroundScripts, 'popup/index.tsx'].map((entrypoint) => `./src/${entrypoint}`)
 
@@ -60,6 +61,6 @@ for await (const filename of glob.scan(publicFolder)) {
     await $`cp ${file.name} ${outdir}`
 }
 
-await Bun.write(`${outdir}/${manifestFile}`, `${JSON.stringify(buildManifest(rankOrigin), null, 4)}\n`)
+await Bun.write(`${outdir}/${manifestFile}`, `${JSON.stringify(builtManifest, null, 4)}\n`)
 await $`cp -R ${publicFolder}/${localesFolder} ${outdir}`
 await $`cp -R ${publicFolder}/icons ${outdir}`

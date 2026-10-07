@@ -63,6 +63,7 @@ export const LEGACY_STORAGE_KEYS = ['iidx:dataset:v1', 'iidx:collection:v1', 'ii
 
 export const SESSION_STORAGE_KEYS = {
     collectionTabId: 'iidx:tabId',
+    rankHandoff: 'iidx:rank-handoff',
 } as const
 
 export const DATASET_FORMAT = 'iidx-data-parser'

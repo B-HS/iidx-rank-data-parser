@@ -8,29 +8,29 @@ export const RANK_IMPORT_STYLE = 0
 export const RANK_PLAYER_TEXT_MAX = 64
 export const RANK_TITLE_MAX = 200
 export const RANK_CHARTS_MAX = 20_000
-export const RANK_IMPORT_MAX_BYTES = 2 * 1024 * 1024
 export const RANK_UNMATCHED_PREVIEW_LIMIT = 5
 
 export const RANK_API_PATHS = {
     session: '/api/extension/session',
-    importRecords: '/api/import/records',
 } as const
 
-export const RANK_SESSION_TIMEOUT_MS = 10_000
-export const RANK_IMPORT_TIMEOUT_MS = 25_000
+export const RANK_IMPORT_PAGE_PATH = '/import'
 
-export const RANK_SYNC_STATUSES = ['success', 'failed', 'skipped'] as const
+export const RANK_SESSION_TIMEOUT_MS = 10_000
+export const RANK_HANDOFF_TTL_MS = 10 * 60_000
+
+export const RANK_SYNC_STATUSES = ['success', 'failed', 'skipped', 'pending'] as const
 export const RANK_SYNC_TRIGGERS = ['auto', 'manual'] as const
 export const RANK_SESSION_ERRORS = ['network', 'server_error'] as const
 export const RANK_SYNC_REASONS = [
     'not_logged_in',
     'dp_unsupported',
     'no_data',
-    'origin_rejected',
     'rate_limited',
     'network',
     'server_error',
     'invalid_payload',
+    'handoff_expired',
 ] as const
 
 export type RankSyncStatus = (typeof RANK_SYNC_STATUSES)[number]
@@ -125,15 +125,33 @@ export const RankImportResultSchema = z.object({
 
 export type RankImportResult = z.infer<typeof RankImportResultSchema>
 
-export const RankImportResponseSchema = z.object({
-    success: z.literal(true),
-    data: RankImportResultSchema,
+export const RankImportOutcomeSchema = z.discriminatedUnion('status', [
+    z.object({ status: z.literal('success'), result: RankImportResultSchema }),
+    z.object({ status: z.literal('failed'), code: z.string() }),
+])
+
+export type RankImportOutcome = z.infer<typeof RankImportOutcomeSchema>
+
+export const RankHandoffSchema = z.object({
+    handoffId: z.string().min(1),
+    createdAt: z.string().datetime(),
 })
 
-export const RankErrorResponseSchema = z.object({
-    success: z.literal(false),
-    error: z.object({ code: z.string(), message: z.string() }),
+export type RankHandoff = z.infer<typeof RankHandoffSchema>
+
+export const RankHandoffPayloadSchema = z.object({
+    handoffId: RankHandoffSchema.shape.handoffId,
+    payload: RankImportSchema,
 })
+
+export type RankHandoffPayload = z.infer<typeof RankHandoffPayloadSchema>
+
+export const RankHandoffResultSchema = z.object({
+    handoffId: RankHandoffSchema.shape.handoffId,
+    outcome: RankImportOutcomeSchema,
+})
+
+export type RankHandoffResult = z.infer<typeof RankHandoffResultSchema>
 
 export const RankSessionStateSchema = z.object({
     user: RankUserSchema.nullable(),

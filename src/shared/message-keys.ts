@@ -54,11 +54,11 @@ export const MESSAGE_KEYS = [
     'rank_reason_not_logged_in',
     'rank_reason_dp_unsupported',
     'rank_reason_no_data',
-    'rank_reason_origin_rejected',
     'rank_reason_rate_limited',
     'rank_reason_network',
     'rank_reason_server_error',
     'rank_reason_invalid_payload',
+    'rank_reason_handoff_expired',
 ] as const
 
 export type MessageKey = (typeof MESSAGE_KEYS)[number]
@@ -112,11 +112,11 @@ export const MESSAGE_PARAMS = {
     rank_reason_not_logged_in: [],
     rank_reason_dp_unsupported: [],
     rank_reason_no_data: [],
-    rank_reason_origin_rejected: [],
     rank_reason_rate_limited: [],
     rank_reason_network: [],
     rank_reason_server_error: [],
     rank_reason_invalid_payload: [],
+    rank_reason_handoff_expired: [],
 } as const satisfies Record<MessageKey, readonly string[]>
 
 export const LocalizedMessageSchema = z.object({

@@ -1,7 +1,7 @@
 import type { z } from 'zod'
 import { LEGACY_STORAGE_KEYS, SESSION_STORAGE_KEYS, STORAGE_KEYS } from '@shared/constants'
-import { RankSessionStateSchema, RankSyncStateSchema } from '@shared/rank-schema'
-import type { RankSessionState, RankSyncState } from '@shared/rank-schema'
+import { RankHandoffSchema, RankSessionStateSchema, RankSyncStateSchema } from '@shared/rank-schema'
+import type { RankHandoff, RankSessionState, RankSyncState } from '@shared/rank-schema'
 import { CollectionStateSchema, DatasetSchema, LoginStateSchema, SettingsSchema, DEFAULT_SETTINGS } from '@shared/schema'
 import type { CollectionState, Dataset, LoginState, Settings } from '@shared/schema'
 
@@ -71,8 +71,24 @@ export const writeRankSync = async (state: RankSyncState) => {
     await chrome.storage.local.set({ [STORAGE_KEYS.rankSync]: state })
 }
 
+export const readRankHandoff = async (): Promise<RankHandoff | null> => {
+    const stored = await chrome.storage.session.get(SESSION_STORAGE_KEYS.rankHandoff)
+    const parsed = RankHandoffSchema.safeParse(stored[SESSION_STORAGE_KEYS.rankHandoff])
+
+    return parsed.success ? parsed.data : null
+}
+
+export const writeRankHandoff = async (handoff: RankHandoff) => {
+    await chrome.storage.session.set({ [SESSION_STORAGE_KEYS.rankHandoff]: handoff })
+}
+
+export const clearRankHandoff = async () => {
+    await chrome.storage.session.remove(SESSION_STORAGE_KEYS.rankHandoff)
+}
+
 export const clearDataset = async () => {
     await chrome.storage.local.remove([STORAGE_KEYS.dataset, STORAGE_KEYS.collection, STORAGE_KEYS.rankSync])
+    await clearRankHandoff()
 }
 
 export const removeLegacyValues = async () => {

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { EXTRACT_FAILURES } from '@shared/domain'
 import { LocalizedMessageSchema } from '@shared/message-keys'
-import { RankOverviewSchema } from '@shared/rank-schema'
+import { RankHandoffPayloadSchema, RankHandoffResultSchema, RankOverviewSchema } from '@shared/rank-schema'
 import {
     ChartSchema,
     CollectionStateSchema,
@@ -59,6 +59,8 @@ export const BackgroundRequestSchema = z.discriminatedUnion('type', [
     z.object({ type: z.literal('CHECK_RANK_SESSION') }),
     z.object({ type: z.literal('SYNC_RANK') }),
     z.object({ type: z.literal('OPEN_RANK_LOGIN') }),
+    z.object({ type: z.literal('GET_RANK_HANDOFF') }),
+    RankHandoffResultSchema.extend({ type: z.literal('REPORT_RANK_RESULT') }),
 ])
 
 export type BackgroundRequest = z.infer<typeof BackgroundRequestSchema>
@@ -91,8 +93,14 @@ export const DownloadSchema = z.object({
 
 export type Download = z.infer<typeof DownloadSchema>
 
+export const RankHandoffReplySchema = z.object({
+    handoff: RankHandoffPayloadSchema.nullable(),
+})
+
+export const RankHandoffResponseSchema = z.object({ ok: z.literal(true), data: RankHandoffReplySchema })
+
 export const BackgroundResponseSchema = z.union([
-    z.object({ ok: z.literal(true), data: z.union([OverviewSchema, DownloadSchema, z.null()]) }),
+    z.object({ ok: z.literal(true), data: z.union([OverviewSchema, DownloadSchema, RankHandoffReplySchema, z.null()]) }),
     z.object({ ok: z.literal(false), error: LocalizedMessageSchema }),
 ])
 

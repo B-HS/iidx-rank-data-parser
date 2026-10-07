@@ -4,7 +4,7 @@ import { describe, expect, test } from 'bun:test'
 import { z } from 'zod'
 import { MANIFEST_MESSAGE_KEYS } from '@shared/message-keys'
 import { DEFAULT_RANK_ORIGIN, RANK_ORIGIN, normalizeRankOrigin, toHostMatchPattern } from '@shared/rank-origin'
-import { buildManifest } from '../config/manifest'
+import { RANK_CONTENT_SCRIPT, buildManifest } from '../config/manifest'
 
 const LOCALES = ['en', 'ko', 'ja']
 const EAGATE_PATTERN = 'https://p.eagate.573.jp/*'
@@ -41,6 +41,26 @@ describe('buildManifest', () => {
     test('e-amusement와 대상 iidx-rank 출처만 host_permissions에 둔다', () => {
         expect(buildManifest(DEFAULT_RANK_ORIGIN).host_permissions).toEqual([EAGATE_PATTERN, 'https://iidx.hyns.dev/*'])
         expect(buildManifest('http://localhost:3000').host_permissions).toEqual([EAGATE_PATTERN, 'http://localhost:3000/*'])
+    })
+
+    test('e-amusement용과 iidx-rank용 content script를 따로 등록한다', () => {
+        const eagateScript = { matches: ['https://p.eagate.573.jp/game/2dx/*'], js: ['content-script.js'], run_at: 'document_idle' }
+
+        expect(buildManifest(DEFAULT_RANK_ORIGIN).content_scripts).toEqual([
+            eagateScript,
+            { matches: ['https://iidx.hyns.dev/*'], js: [RANK_CONTENT_SCRIPT], run_at: 'document_idle' },
+        ])
+        expect(buildManifest('http://localhost:3000').content_scripts).toEqual([
+            eagateScript,
+            { matches: ['http://localhost:3000/*'], js: ['rank-content-script.js'], run_at: 'document_idle' },
+        ])
+    })
+
+    test('정적 manifest에는 iidx-rank 출처가 없다', () => {
+        const staticManifest = readFileSync(resolve(import.meta.dir, '../public/manifest.json'), 'utf8')
+
+        expect(staticManifest).not.toContain('iidx.hyns.dev')
+        expect(staticManifest).not.toContain(RANK_CONTENT_SCRIPT)
     })
 
     test('이름과 설명을 로케일 메시지로 참조한다', () => {

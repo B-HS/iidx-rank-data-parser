@@ -1,7 +1,7 @@
 import { COLLECTION_STALE_MS, DATASET_SCHEMA_VERSION, EXPORT_FILE_PREFIX } from '@shared/constants'
 import { toMessage } from '@shared/message-keys'
 import { BackgroundEnvelopeSchema, BackgroundRequestSchema } from '@shared/messages'
-import type { BackgroundRequest, BackgroundResponse, Overview } from '@shared/messages'
+import type { BackgroundRequest, BackgroundRequestType, BackgroundResponse, Overview } from '@shared/messages'
 import { RANK_ORIGIN } from '@shared/rank-origin'
 import { RANK_IMPORT_VERSION } from '@shared/rank-schema'
 import {
@@ -11,7 +11,6 @@ import {
     readDataset,
     readLogin,
     readRankSession,
-    readRankSync,
     readSettings,
     removeLegacyValues,
     writeCollection,
@@ -20,13 +19,16 @@ import {
 import { isCollectionStale } from '@core/collection-flow'
 import { messageOfError } from '@core/flow-error'
 import { toRankImport } from '@core/rank-export'
+import { isRankTabSender } from '@core/rank-handoff'
 import { checkLoginState, runCollection } from './collection'
-import { openRankLogin, refreshRankSession, runRankSync } from './rank'
+import { getRankHandoff, openRankLogin, reconcileRankSync, refreshRankSession, reportRankResult, runRankSync } from './rank'
 import { createRun, releaseRun, runState } from './run-state'
 import { closeCollectionTab } from './tab'
 
 const BUSY_RESPONSE: BackgroundResponse = { ok: false, error: toMessage('error_busy') }
 const NO_DATASET_RESPONSE: BackgroundResponse = { ok: false, error: toMessage('error_no_dataset') }
+const INVALID_REQUEST_RESPONSE: BackgroundResponse = { ok: false, error: toMessage('error_invalid_request') }
+const RANK_TAB_REQUEST_TYPES: readonly BackgroundRequestType[] = ['GET_RANK_HANDOFF', 'REPORT_RANK_RESULT']
 
 const reconcileCollection = async () => {
     const stored = await readCollection()
@@ -69,7 +71,7 @@ const buildOverview = async (): Promise<Overview> => {
         readSettings(),
         readDataset(),
         readRankSession(),
-        readRankSync(),
+        reconcileRankSync(),
     ])
 
     return {
@@ -204,15 +206,26 @@ const handle = async (message: BackgroundRequest): Promise<BackgroundResponse> =
         case 'OPEN_RANK_LOGIN':
             await openRankLogin()
             return { ok: true, data: null }
+
+        case 'GET_RANK_HANDOFF':
+            return { ok: true, data: { handoff: await getRankHandoff() } }
+
+        case 'REPORT_RANK_RESULT':
+            await reportRankResult(message)
+            return { ok: true, data: null }
     }
 }
 
-chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
     if (!BackgroundEnvelopeSchema.safeParse(message).success) return false
 
     const request = BackgroundRequestSchema.safeParse(message)
-    if (!request.success) {
-        sendResponse({ ok: false, error: toMessage('error_invalid_request') } satisfies BackgroundResponse)
+    const isAllowed =
+        request.success &&
+        (!RANK_TAB_REQUEST_TYPES.includes(request.data.type) || isRankTabSender(sender, { extensionId: chrome.runtime.id, origin: RANK_ORIGIN }))
+
+    if (!request.success || !isAllowed) {
+        sendResponse(INVALID_REQUEST_RESPONSE)
         return false
     }
 

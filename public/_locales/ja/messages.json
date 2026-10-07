@@ -251,9 +251,6 @@
     "rank_reason_no_data": {
         "message": "反映する収集データがありません"
     },
-    "rank_reason_origin_rejected": {
-        "message": "iidx-rankサーバーがこの拡張機能のリクエストを許可しませんでした。サーバーに拡張機能IDが登録されているか確認してください"
-    },
     "rank_reason_rate_limited": {
         "message": "短時間に繰り返し反映しました。しばらくしてからもう一度お試しください"
     },
@@ -265,6 +262,9 @@
     },
     "rank_reason_invalid_payload": {
         "message": "反映するデータの形式が正しくないか、大きすぎます"
+    },
+    "rank_reason_handoff_expired": {
+        "message": "制限時間内にiidx-rankのインポート画面から結果を受け取れませんでした。もう一度反映してください"
     },
     "popup_subtitle": {
         "message": "beatmania IIDX 34 · e-amusementデータ収集"
@@ -329,7 +329,7 @@
         "message": "iidx-rankのログインページを開いてログインし、このポップアップを開き直すか「再確認」を押してください。収集したデータはログインしたアカウントに反映されます。"
     },
     "popup_rank_hint_logged_in": {
-        "message": "収集が終わると、このアカウントに自動で反映されます。"
+        "message": "収集が終わるとiidx-rankのインポート画面が開き、このアカウントに反映されます。"
     },
     "popup_rank_hint_network": {
         "message": "iidx-rankに接続できませんでした。ネットワークを確認してから再確認してください。"
@@ -377,7 +377,7 @@
         "message": "収集中は使用できません。"
     },
     "popup_reason_syncing": {
-        "message": "iidx-rankへの反映中は使用できません。"
+        "message": "iidx-rankのインポート画面を開いている間は使用できません。"
     },
     "popup_reason_login_unchecked": {
         "message": "まずe-amusementのログイン状態を確認してください。"
@@ -393,9 +393,6 @@
     },
     "popup_reason_no_dataset": {
         "message": "反映する保存データがありません。先に収集してください。"
-    },
-    "popup_reason_rank_login_required": {
-        "message": "iidx-rankにログインしないと反映できません。"
     },
     "popup_progress_title": {
         "message": "収集の進行状況"
@@ -494,11 +491,14 @@
     "popup_sync_title": {
         "message": "iidx-rankに反映"
     },
+    "popup_sync_description": {
+        "message": "ボタンを押すとiidx-rankのインポート画面が新しいタブで開き、その画面が収集したデータをアップロードして結果を表示します。ログインしていない場合は、その画面でログインを案内します。"
+    },
     "popup_action_sync": {
-        "message": "iidx-rankに反映"
+        "message": "インポート画面を開いて反映"
     },
     "popup_action_syncing": {
-        "message": "反映中..."
+        "message": "インポート画面を開いています..."
     },
     "popup_sync_none": {
         "message": "まだ反映した記録がありません。"
@@ -511,6 +511,12 @@
     },
     "popup_sync_status_skipped": {
         "message": "反映をスキップ"
+    },
+    "popup_sync_status_pending": {
+        "message": "反映進行中"
+    },
+    "popup_sync_pending_hint": {
+        "message": "iidx-rankのインポートタブで反映が進行中です。結果が出るとここに表示されます。タブを閉じた場合は、上のボタンでもう一度お試しください。"
     },
     "popup_sync_trigger_auto": {
         "message": "自動（収集直後）"
@@ -562,6 +568,6 @@
         }
     },
     "popup_footer_note": {
-        "message": "収集は新しいe-amusementタブで順番に行われます。収集したデータはこのブラウザにのみ保存され、iidx-rankにログインしていれば収集直後に自動で反映されます。"
+        "message": "収集は新しいe-amusementタブで順番に行われます。収集したデータはこのブラウザにのみ保存され、iidx-rankにログインしていれば収集直後にiidx-rankのインポート画面が開いて反映されます。"
     }
 }

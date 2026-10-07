@@ -15,6 +15,7 @@ const SYNC_STATUS_BADGE = {
     success: { tone: 'success', label: () => t('popup_sync_status_success') },
     failed: { tone: 'danger', label: () => t('popup_sync_status_failed') },
     skipped: { tone: 'warning', label: () => t('popup_sync_status_skipped') },
+    pending: { tone: 'neutral', label: () => t('popup_sync_status_pending') },
 } as const
 
 const SYNC_TRIGGER_LABEL = {
@@ -29,6 +30,7 @@ export const RankSyncCard: FC<RankSyncCardProps> = ({ rank, blockReason, onSync 
 
     return (
         <Card title={t('popup_sync_title')} badge={badge === null ? null : <Badge tone={badge.tone}>{badge.label()}</Badge>}>
+            <p className='mb-1 break-words text-[11px] leading-relaxed text-muted-foreground'>{t('popup_sync_description')}</p>
             <p className='mb-3 break-words text-[11px] leading-relaxed text-muted-foreground'>{t('popup_settings_note_scope')}</p>
 
             <Button size='sm' className='w-full' onClick={onSync} disabled={isSyncing || blockReason !== null}>
@@ -58,6 +60,10 @@ export const RankSyncCard: FC<RankSyncCardProps> = ({ rank, blockReason, onSync 
                                 <dd className='break-words'>{translateMessage({ key: `rank_reason_${lastSync.reason}`, params: [] })}</dd>
                             )}
                         </dl>
+
+                        {lastSync.status === 'pending' && (
+                            <p className='mt-2 break-words text-[11px] leading-relaxed text-muted-foreground'>{t('popup_sync_pending_hint')}</p>
+                        )}
 
                         {lastSync.serverCode !== null && (
                             <p className='mt-1 break-all text-[11px] text-muted-foreground'>

@@ -125,7 +125,7 @@ describe('Popup', () => {
         expect(findButton(dom.container, 'SP').getAttribute('aria-pressed')).toBe('false')
         expect(findButton(dom.container, '12').getAttribute('aria-pressed')).toBe('true')
         expect(text()).toContain('DP를 선택하면 수집은 되지만 iidx-rank에는 반영되지 않습니다')
-        expect(findButton(dom.container, 'iidx-rank에 반영').disabled).toBe(true)
+        expect(findButton(dom.container, '가져오기 화면을 열어 반영').disabled).toBe(true)
         expect(text()).toContain('DP 데이터는 iidx-rank에 반영되지 않습니다')
     })
 
@@ -146,7 +146,7 @@ describe('Popup', () => {
 
         expect(findButton(dom.container, 'SP').disabled).toBe(true)
         expect(findButton(dom.container, '수집 중...').disabled).toBe(true)
-        expect(findButton(dom.container, 'iidx-rank에 반영').disabled).toBe(true)
+        expect(findButton(dom.container, '가져오기 화면을 열어 반영').disabled).toBe(true)
         expect(text()).toContain('수집 중에는 사용할 수 없습니다')
         expect(text()).toContain('레벨 12 수집 중: 2페이지 (offset 50)')
         expect(dom.container.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('수집 진행률')
@@ -209,7 +209,7 @@ describe('Popup', () => {
                     session: LOGGED_IN_RANK_SESSION,
                     lastSync: {
                         status: 'failed',
-                        reason: 'origin_rejected',
+                        reason: 'rate_limited',
                         trigger: 'manual',
                         at: '2026-10-07T10:06:00.000Z',
                         datasetGeneratedAt: null,
@@ -221,18 +221,94 @@ describe('Popup', () => {
                         changedCount: null,
                         unmatchedCount: null,
                         unmatchedPreview: [],
-                        serverCode: 'ORIGIN_NOT_ALLOWED',
+                        serverCode: 'IMPORT_COOLDOWN',
                     },
                 },
             }),
         )
 
         expect(text()).toContain('반영 실패')
-        expect(text()).toContain('서버에 익스텐션 ID가 등록되어 있는지')
-        expect(text()).toContain('ORIGIN_NOT_ALLOWED')
+        expect(text()).toContain('짧은 시간에 반복해서 반영했습니다')
+        expect(text()).toContain('IMPORT_COOLDOWN')
+        expect(text()).not.toContain('가져오기 탭에서 반영이 진행 중입니다')
     })
 
-    test('iidx-rank에 로그인되어 있지 않으면 로그인 열기와 다시 확인 버튼을 보이고 반영을 막는다', async () => {
+    test('가져오기 화면에서 결과가 오기 전에는 진행 중 안내를 보이고 다시 시도할 수 있다', async () => {
+        await mount(
+            buildOverview({
+                login: LOGGED_IN_EAMUSEMENT,
+                dataset: SAVED_DATASET,
+                rank: {
+                    session: LOGGED_IN_RANK_SESSION,
+                    lastSync: {
+                        status: 'pending',
+                        reason: null,
+                        trigger: 'auto',
+                        at: '2026-10-07T10:06:00.000Z',
+                        datasetGeneratedAt: SAVED_DATASET.generatedAt,
+                        user: LOGGED_IN_RANK_SESSION.user,
+                        importId: null,
+                        importedAt: null,
+                        receivedCount: null,
+                        matchedCount: null,
+                        changedCount: null,
+                        unmatchedCount: null,
+                        unmatchedPreview: [],
+                        serverCode: null,
+                    },
+                },
+            }),
+        )
+
+        expect(text()).toContain('반영 진행 중')
+        expect(text()).toContain('가져오기 탭에서 반영이 진행 중입니다')
+        expect(text()).toContain('탭을 닫았다면 위 버튼으로 다시 시도해 주세요')
+        expect(text()).toContain('자동 (수집 직후)')
+        expect(text()).not.toContain('전송한 차트')
+        expect(findButton(dom.container, '가져오기 화면을 열어 반영').disabled).toBe(false)
+    })
+
+    test('만료된 반영은 실패와 만료 사유로 보인다', async () => {
+        await mount(
+            buildOverview({
+                login: LOGGED_IN_EAMUSEMENT,
+                dataset: SAVED_DATASET,
+                rank: {
+                    lastSync: {
+                        status: 'failed',
+                        reason: 'handoff_expired',
+                        trigger: 'manual',
+                        at: '2026-10-07T10:16:00.000Z',
+                        datasetGeneratedAt: SAVED_DATASET.generatedAt,
+                        user: null,
+                        importId: null,
+                        importedAt: null,
+                        receivedCount: null,
+                        matchedCount: null,
+                        changedCount: null,
+                        unmatchedCount: null,
+                        unmatchedPreview: [],
+                        serverCode: null,
+                    },
+                },
+            }),
+        )
+
+        expect(text()).toContain('반영 실패')
+        expect(text()).toContain('제한 시간 안에 iidx-rank 가져오기 화면에서 결과를 받지 못했습니다')
+    })
+
+    test('반영 버튼은 가져오기 화면을 연다는 것을 설명하고 누르면 반영을 요청한다', async () => {
+        await mount(buildOverview({ login: LOGGED_IN_EAMUSEMENT, dataset: SAVED_DATASET, rank: { session: LOGGED_IN_RANK_SESSION } }))
+
+        expect(text()).toContain('iidx-rank 가져오기 화면이 새 탭으로 열리고')
+
+        await click(findButton(dom.container, '가져오기 화면을 열어 반영'))
+
+        expect(requests.some((request) => request.type === 'SYNC_RANK')).toBe(true)
+    })
+
+    test('iidx-rank에 로그인되어 있지 않아도 로그인 열기와 다시 확인 버튼을 보이고 반영 버튼은 막지 않는다', async () => {
         await mount(
             buildOverview({
                 login: LOGGED_IN_EAMUSEMENT,
@@ -244,8 +320,7 @@ describe('Popup', () => {
         expect(text()).toContain('대상: https://iidx.hyns.dev')
         expect(findButton(dom.container, 'iidx-rank 로그인 열기').disabled).toBe(false)
         expect(findButton(dom.container, '다시 확인').disabled).toBe(false)
-        expect(findButton(dom.container, 'iidx-rank에 반영').disabled).toBe(true)
-        expect(text()).toContain('iidx-rank에 로그인해야 반영할 수 있습니다')
+        expect(findButton(dom.container, '가져오기 화면을 열어 반영').disabled).toBe(false)
 
         await click(findButton(dom.container, 'iidx-rank 로그인 열기'))
 

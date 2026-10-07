@@ -251,9 +251,6 @@
     "rank_reason_no_data": {
         "message": "There is no collected data to reflect"
     },
-    "rank_reason_origin_rejected": {
-        "message": "The iidx-rank server did not allow requests from this extension. Check that the extension ID is registered on the server"
-    },
     "rank_reason_rate_limited": {
         "message": "Too many sync attempts in a short time. Please try again shortly"
     },
@@ -265,6 +262,9 @@
     },
     "rank_reason_invalid_payload": {
         "message": "The data to reflect is invalid or too large"
+    },
+    "rank_reason_handoff_expired": {
+        "message": "No result came back from the iidx-rank import page in time. Please reflect again"
     },
     "popup_subtitle": {
         "message": "beatmania IIDX 34 · e-amusement data collection"
@@ -329,7 +329,7 @@
         "message": "Open the iidx-rank login page and log in, then reopen this popup or press Check again. Collected data is reflected to the account you log in with."
     },
     "popup_rank_hint_logged_in": {
-        "message": "Collected data is reflected to this account automatically when collection finishes."
+        "message": "When collection finishes, the iidx-rank import page opens and reflects the data to this account."
     },
     "popup_rank_hint_network": {
         "message": "Could not connect to iidx-rank. Check your network and try again."
@@ -377,7 +377,7 @@
         "message": "Not available while collecting."
     },
     "popup_reason_syncing": {
-        "message": "Not available while reflecting to iidx-rank."
+        "message": "Not available while the iidx-rank import page is being opened."
     },
     "popup_reason_login_unchecked": {
         "message": "Check the e-amusement login state first."
@@ -393,9 +393,6 @@
     },
     "popup_reason_no_dataset": {
         "message": "There is no saved data to reflect. Collect first."
-    },
-    "popup_reason_rank_login_required": {
-        "message": "You must log in to iidx-rank to reflect data."
     },
     "popup_progress_title": {
         "message": "Collection progress"
@@ -494,11 +491,14 @@
     "popup_sync_title": {
         "message": "Reflect to iidx-rank"
     },
+    "popup_sync_description": {
+        "message": "The button opens the iidx-rank import page in a new tab. That page uploads the collected data and shows the result. If you are not logged in, the page guides you through logging in."
+    },
     "popup_action_sync": {
-        "message": "Reflect to iidx-rank"
+        "message": "Open import page and reflect"
     },
     "popup_action_syncing": {
-        "message": "Reflecting..."
+        "message": "Opening import page..."
     },
     "popup_sync_none": {
         "message": "Nothing has been reflected yet."
@@ -511,6 +511,12 @@
     },
     "popup_sync_status_skipped": {
         "message": "Skipped"
+    },
+    "popup_sync_status_pending": {
+        "message": "In progress"
+    },
+    "popup_sync_pending_hint": {
+        "message": "Reflecting is in progress in the iidx-rank import tab. The result appears here when it is done. If you closed the tab, use the button above to try again."
     },
     "popup_sync_trigger_auto": {
         "message": "Automatic (after collection)"
@@ -562,6 +568,6 @@
         }
     },
     "popup_footer_note": {
-        "message": "Collection runs page by page in a new e-amusement tab. Data is stored only in this browser, and is reflected to iidx-rank right after collection when you are logged in."
+        "message": "Collection runs page by page in a new e-amusement tab. Data is stored only in this browser, and right after collection the iidx-rank import page opens to reflect it when you are logged in."
     }
 }
