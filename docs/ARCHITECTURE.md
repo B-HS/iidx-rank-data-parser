@@ -2,72 +2,106 @@
 
 ## 구성 요소
 
-| 경로                         | 역할                                                      |
-| ---------------------------- | --------------------------------------------------------- |
-| `src/content-script.ts`      | e-agate 페이지에서 DOM을 읽어 파싱 결과를 돌려주는 브리지 |
-| `src/core/eagate-parsers.ts` | 로그인·DJ 정보·노트레이더·난이도 페이지 파서              |
-| `src/core/chart-id.ts`       | iidx-rank와 동일한 `chart-<sha256 32자>` 식별자 생성      |
-| `src/core/rank-export.ts`    | iidx-rank 가져오기용 요약 변환                            |
-| `src/background/index.ts`    | 탭 오케스트레이션, 진행률 저장, export 처리               |
-| `src/shared/schema.ts`       | Zod 단일 출처 DTO                                         |
-| `src/shared/storage.ts`      | `chrome.storage` 읽기·쓰기 래퍼                           |
-| `src/widgets/popup/*`        | popup UI                                                  |
+| 경로                                    | 역할                                                                 |
+| --------------------------------------- | -------------------------------------------------------------------- |
+| `src/content-script.ts`                 | e-agate 페이지에서 DOM을 읽어 파싱 결과를 돌려주는 브리지            |
+| `src/core/eagate-parsers.ts`            | 로그인·DJ 정보·노트레이더·난이도 페이지 파서(순수 함수)              |
+| `src/core/chart-id.ts`                  | iidx-rank와 동일한 `chart-<sha256 32자>` 식별자 생성                 |
+| `src/core/collection-flow.ts`           | 난이도 페이지 종료 판정, 수집 정체 판정, 노트레이더 선택(순수 함수)  |
+| `src/core/dataset-builder.ts`           | 수집 결과를 검증·정규화해 dataset으로 조립                           |
+| `src/core/rank-export.ts`               | dataset을 rank-import v2 본문으로 변환                               |
+| `src/core/rank-client.ts`               | iidx-rank API 호출(세션 확인, 가져오기)과 응답 분류                  |
+| `src/core/rank-sync.ts`                 | 저장 데이터를 iidx-rank에 반영하고 결과를 상태 객체로 돌려줌         |
+| `src/background/*`                      | 탭 오케스트레이션, 진행률 저장, 반영 실행, popup 요청 처리           |
+| `src/shared/schema.ts`                  | Zod 단일 출처 DTO                                                    |
+| `src/shared/rank-schema.ts`             | rank-import v2와 iidx-rank 응답, 반영 상태 스키마                    |
+| `src/shared/message-keys.ts`            | background가 저장하는 메시지 키와 파라미터 정의                      |
+| `src/shared/i18n.ts`                    | popup 메시지 키, `chrome.i18n` 번역 헬퍼, 날짜·숫자 포맷             |
+| `src/shared/storage.ts`                 | `chrome.storage` 읽기·쓰기 래퍼                                      |
+| `src/widgets/popup/popup.tsx`           | background와 통신하고 카드들을 조립하는 popup 본체                   |
+| `src/features/<이름>/<이름>.tsx`        | props로만 데이터를 받는 카드 컴포넌트(1파일 1컴포넌트)               |
+| `src/ui/*`                              | Button, Badge, Card, Progress 기본 컴포넌트                          |
+| `public/_locales/{ko,ja,en}`            | `chrome.i18n` 메시지. 세 로케일의 키 집합은 테스트가 같게 강제합니다 |
+| `config/manifest.ts`, `config/build.ts` | `RANK_ORIGIN`을 `host_permissions`와 번들 상수로 주입하는 빌드       |
 
 파서는 순수 함수이고 `Document`만 입력으로 받습니다. 네트워크·스토리지·권한은 background 계층에만 있습니다.
 
+## 계층과 의존 방향
+
+`widgets → features → ui → shared` 순으로만 참조합니다. popup 계층은 `src/core`·`src/background`를 import하지 않고, background와는 `chrome.runtime.sendMessage`로만 통신합니다. 요청과 응답은 `src/shared/messages.ts`의 Zod 스키마로 검증하며, popup은 응답을 `BackgroundResponseSchema`로 파싱한 뒤에만 사용합니다.
+
+React Compiler는 쓰지 않습니다. 번들러가 Bun.build라 babel 파이프라인이 없기 때문입니다. `useCallback`·`useMemo`는 쓰지 않고, effect 안에서 쓰는 함수는 effect 내부나 모듈 수준에 둡니다.
+
+## 메시지와 i18n
+
+background는 문장을 만들지 않고 `{ key, params }`만 저장합니다(`LocalizedMessage`). `params`는 `MESSAGE_PARAMS`가 정한 순서의 문자열 배열이라 `chrome.i18n.getMessage(key, params)`에 그대로 넘깁니다. popup이 표시할 때 번역하므로 브라우저 언어가 바뀌어도 저장된 상태가 다시 번역되고, 내보내는 dataset의 `meta.warnings`도 키와 파라미터로 남습니다.
+
+- popup 전용 문구의 키와 파라미터는 `src/shared/i18n.ts`의 `POPUP_MESSAGE_PARAMS`가 정의합니다.
+- `t(key, params)`는 키에 선언된 파라미터만 받습니다. 번역이 비어 있으면 키 이름을 대신 보여 주어 빈 문자열이 화면에 나오지 않습니다.
+- 날짜와 숫자는 `Intl`에 `chrome.i18n.getUILanguage()`를 넘겨 포맷합니다.
+- DJ NAME, IIDX ID, EX SCORE, NOTES 등 게임 고유 용어는 번역하지 않습니다.
+- `tests/i18n-keys.test.ts`가 세 로케일의 키 집합, placeholder 이름과 순서, 코드가 쓰는 키의 존재, manifest의 `__MSG_*__` 참조, 화면 코드의 한국어·일본어 하드코딩 여부를 검사합니다.
+
 ## 수집 오케스트레이션
 
-background는 popup의 요청을 받으면 `runCollection`을 실행합니다. 전체는 하나의 탭에서 순차로 진행됩니다.
+background는 popup의 요청을 받으면 `runCollection`을 실행합니다. 전체는 하나의 탭에서 순차로 진행됩니다. 실행 잠금(`runState.active`)은 동기적으로 잡아 두 수집이 겹치지 않게 합니다.
 
 1. 로그인 확인 — `index.html`을 열고 로그인 상태를 판정합니다. 60초 이내의 성공 결과는 재사용합니다.
-2. DJ 정보 — `djdata/status.html`로 이동해 `EXTRACT STATUS`를 요청합니다.
-3. 노트레이더 — `djdata/music/notesradar.html`로 이동합니다. 비동기 JSON 엔드포인트(`djdata/music/json/notesradar.html`)를 먼저 시도하고, 값이 비어 있으면 같은 문서에서 DOM 파싱으로 대체합니다.
+2. DJ 정보 — `djdata/status.html`에서 플레이어와 노트레이더를 읽습니다. 로그인이 필요한 페이지면 `session_expired`로 실패합니다.
+3. 노트레이더 — `djdata/music/notesradar.html`의 DOM을 읽고, status 페이지 값과 합쳐 라벨로 매칭된 값을 우선 선택합니다.
 4. 곡 데이터 — 선택한 레벨마다 `difficult=<level-1>&style=<style>&disp=1&offset=<n>`을 0부터 50씩 증가시키며 요청합니다.
-5. 저장 — `DatasetSchema.parse`로 검증한 뒤 `chrome.storage.local`에 저장합니다.
+5. 저장 — `DatasetSchema`로 검증한 뒤 `chrome.storage.local`에 저장합니다.
+6. 반영 — 저장이 끝나면 iidx-rank 세션이 있을 때 자동으로 반영합니다(`docs/INTEGRATION.md`).
 
-종료 조건은 데이터 없음 문구, 0건 페이지, 또는 페이지당 50건 미만입니다. 레벨당 상한은 60페이지입니다. 레벨 하나가 실패하면 경고를 남기고 다음 레벨로 진행하며, 최종 상태는 `partial`이 됩니다.
+종료 판정은 `classifyDifficultyPage`가 파싱한 행 수로 합니다. 표가 있고 행이 50건 미만이면 종료, 안내 문구만 있으면 종료입니다. 표도 안내 문구도 없는 페이지는 종료가 아니라 예상 밖 페이지로 보고 재시도한 뒤 레벨 실패로 처리합니다. 레벨당 상한은 60페이지입니다.
 
-요청 사이에는 `DELAY_PROFILES`의 균등분포 대기를 둡니다. 이는 서버 부하를 사람의 페이지 넘김 속도로 낮추기 위한 것입니다.
+실패 처리 규칙:
 
-## 로그인 감지
+- 페이지는 2회까지 시도합니다. 응답에는 요청 URL과 같은 URL인지 확인합니다.
+- 탭 닫힘·로딩 초과(25초)·세션 만료·연속 2레벨 실패가 나오면 남은 레벨을 실패로 표시하고 지금까지 모은 결과를 저장합니다. 상태는 `partial`입니다.
+- 차트가 0건이고 실패 레벨이 있으면 저장하지 않고 실패로 끝냅니다. 이전의 정상 데이터를 빈 결과로 덮지 않기 위함입니다.
+- 중단은 `AbortController`로 대기를 즉시 끊습니다. 수집 중에는 로그인 확인과 데이터 삭제를 거부합니다(`error_busy`).
 
-`#error-page .error_login`이 있거나 페이지 내 `ea_common_template.userstatus`의 `"login": false`가 있으면 로그아웃으로 판정합니다. 그 밖에는 `#log-on .on-name` 목록의 DJ NAME·커뮤니티 닉네임이 `---`가 아닐 때 로그인으로 봅니다. 두 경로 모두 실패하면 `false`로 처리합니다(fail-closed).
+### service worker 재시작 복구
+
+service worker는 수집 도중 종료될 수 있습니다. 기동 시와 `GET_OVERVIEW`·`START_COLLECTION`·`CHECK_LOGIN`·`CLEAR_DATA` 앞에서 `reconcileCollection`이 저장소는 `running`인데 살아 있는 run이 없는 경우를 `failed` + `error_interrupted`로 바꾸고 남은 수집 탭을 닫습니다. `COLLECTION_STALE_MS`(5분)의 `updatedAt` 정체는 보조 판정입니다. 이 복구가 없으면 `running`이 영구히 남아 시작·삭제 버튼이 모두 막힙니다.
+
+요청 사이에는 `DELAY_PROFILES`의 균등분포 대기를 둡니다. 서버 부하를 사람의 페이지 넘김 속도로 낮추기 위한 것이며 낮추지 않습니다.
+
+## popup 화면
+
+위에서 아래로 e-amusement 로그인, iidx-rank 계정, 수집 설정, 수집 시작, 진행, 저장된 데이터, iidx-rank 반영 카드가 있습니다.
+
+- 버튼이 비활성이면 사유를 버튼 근처에 문장으로 보입니다(로그인 미확인·확인 실패·필요, 레벨 없음, 수집 중, 반영 중, 저장 데이터 없음, DP).
+- 로그인 상태는 미확인과 확인 실패와 비로그인을 서로 다른 배지로 구분합니다. 모든 배지는 색뿐 아니라 문구로 상태를 말합니다.
+- 설정의 선택형 버튼은 `aria-pressed`, 그룹은 `role='group'`과 라벨 연결, 진행바는 `aria-label`, 진행 문구와 반영 결과는 `aria-live`, 오류는 `role='alert'`입니다.
+- 경고는 4건까지 보이고 나머지는 건수로 생략합니다. 긴 DJ NAME·곡명·번역 문구는 줄바꿈하며 폭 420px에서 가로 넘침이 없습니다.
+- 저장 데이터 삭제는 브라우저 `confirm` 대신 화면 안의 확인 단계를 거칩니다.
+- SP 레벨 12만 iidx-rank에 반영된다는 안내를 설정 카드와 반영 카드에 둡니다. DP를 고르면 경고를 추가로 보입니다.
+- background가 응답하지 않거나(40초 초과, 연결 오류, `undefined`) 응답 형식이 맞지 않으면 오류 배너를 보입니다.
+- popup을 열 때마다 `GET_OVERVIEW` 뒤에 `CHECK_RANK_SESSION`을 보내 로그인 탭에서 돌아온 상태를 반영합니다.
 
 ## 권한 경계
 
-| 권한                                | 사용 목적                                    |
-| ----------------------------------- | -------------------------------------------- |
-| `storage`, `unlimitedStorage`       | 수집 결과·로그인 상태·설정 저장              |
-| `tabs`                              | 수집용 탭 생성·닫기·이동, 페이지 로딩 대기   |
-| `scripting`                         | 로그인 세션 쿠키로 notesradar JSON 요청 실행 |
-| `downloads`                         | popup에서 export 파일 저장                   |
-| `host_permissions: p.eagate.573.jp` | 수집 대상 호스트 한정                        |
+| 권한                                | 사용 목적                                  |
+| ----------------------------------- | ------------------------------------------ |
+| `storage`, `unlimitedStorage`       | 수집 결과·로그인 상태·설정·반영 결과 저장  |
+| `tabs`                              | 수집용 탭 생성·닫기·이동, 페이지 로딩 대기 |
+| `host_permissions: p.eagate.573.jp` | 수집 대상 호스트 한정                      |
+| `host_permissions: <RANK_ORIGIN>`   | iidx-rank API를 브라우저 세션으로 호출     |
 
-계정 비밀번호·쿠키 값을 코드에서 읽거나 저장하지 않습니다. JSON 요청은 `credentials: 'include'`로 브라우저 세션을 그대로 사용하며 background에서 쿠키 헤더를 직접 조작하지 않습니다.
+계정 비밀번호·쿠키 값을 코드에서 읽거나 저장하지 않습니다. iidx-rank 호출은 `credentials: 'include'`로 브라우저가 세션 쿠키를 붙이게 하며 쿠키 헤더를 직접 다루지 않습니다.
+
+`RANK_ORIGIN`은 빌드 시 환경변수로 정합니다. 기본값은 `https://iidx.hyns.dev`이고 `config/manifest.ts`가 `host_permissions`를 만들며 같은 값이 번들 상수로 주입됩니다. 정적 `public/manifest.json`에는 iidx-rank 출처가 없습니다.
+
+## 저장소 키
+
+`STORAGE_KEYS`의 dataset·collection·login은 v2입니다. 기동 시 v1 값은 지워지므로 이전 버전에서 수집한 데이터는 다시 수집해야 합니다.
 
 ## 확장 지점
 
 - 게임 버전: `GAME_VERSION` 상수 단일 지점.
 - 페이지 구조 변경: `eagate-parsers.ts`의 선택자·정규식만 수정. UI·스토리지 계층은 그대로 유지됩니다.
-- 수집 항목 추가: `EXTRACT_KINDS`에 종류를 추가하고 `ExtractPayload`에 필드를 넣은 뒤 `DatasetSchema`에 반영합니다.
-- 서버 연동: `docs/INTEGRATION.md`의 인증 흐름 계획을 참고합니다. `rank-export.ts`가 이미 서버가 기대하는 형태로 투영하므로, 이후에는 전송 계층만 추가하면 됩니다.
-
-## 수정 이력
-
-### difficulty 순회 종료 조건
-
-- `データがみつかりません` 안내는 목록이 없는 페이지에서만 종료 신호로 사용합니다. 목록이 함께 있으면 무시합니다. 이전 페이지의 안내 문구가 남아 첫 페이지에서 순회가 끝나던 문제를 막습니다.
-- 램프 이미지(`clflgN.gif`)가 없는 행은 곡으로 세지 않습니다. 합계·안내 행이 차트로 들어가 페이지당 50건을 넘기던 문제를 막습니다.
-- 페이지 로딩은 URL의 경로와 쿼리를 함께 비교합니다. offset이 다른 이전 페이지를 다시 읽는 것을 막습니다.
-- 같은 `chartId`는 수집 전체에서 한 번만 저장합니다.
-
-### 데이터 무결성
-
-수집 결과는 먼저 전체 스키마로 검증합니다. 통과하지 못하면 필드 단위로 낮춰 저장합니다.
-
-- 차트 한 건이 검증에 실패하면 그 차트만 제외하고 나머지를 저장합니다. 제외 건수는 `meta.warnings`에 기록됩니다.
-- 노트레이더나 플레이어 정보가 실패하면 해당 필드만 `null`이 됩니다. 차트 데이터는 유지됩니다.
-- 노트레이더 `raw`의 빈 라벨은 파서 단계에서 제거합니다.
-- 이 동작은 `src/core/dataset-builder.ts`에 있고 `tests/dataset-builder.test.ts`가 검증합니다.
-
-스키마 검증이 실패하면 새 결과를 저장하지 않으므로, 이전에 저장된 데이터는 그대로 남습니다.
+- 새 문구: `MESSAGE_PARAMS`(background 저장용) 또는 `POPUP_MESSAGE_PARAMS`(popup 전용)에 키를 더하고 세 로케일에 모두 번역을 넣습니다. 빠지면 `tests/i18n-keys.test.ts`가 실패합니다.
+- 서버 연동: `docs/INTEGRATION.md`를 따릅니다.
+- 카카오 등 다른 외부 로그인: 서버 쪽 설정이며 익스텐션 변경은 없습니다(TODO).

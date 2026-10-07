@@ -6,7 +6,7 @@
 
 - 로그인 상태 표시: `#log-on .on-name` 목록. 각 항목은 `li` 두 개(라벨, 값)입니다. 비로그인은 값이 `---`입니다.
 - 로그인 필요 페이지: `#error-page .error_login`과 페이지 내 `userstatus` 스크립트의 `"login": false`.
-- 페이지는 Shift_JIS일 수 있습니다. `document` 파싱 후에는 영향이 없지만, 원문 문자열을 다룰 때 주의합니다.
+- 실제 응답은 UTF-8입니다. 파서는 브라우저가 만든 `document`만 읽습니다.
 
 ## status.html
 
@@ -19,20 +19,20 @@
 | `.dj-status .dj-rank .point-cat`             | DJ POINT 등 포인트 계열                                     |
 | `.dj-status .dj-rank .visit-cat`             | 플레이 횟수 계열                                            |
 | `.dj-status .dj-rank#notes`                  | 노트레이더 블록                                             |
-| `#notes ul li`                               | 축 하나. `p` 두 개(라벨, 값)                                |
+| `#notes ul li`, `#notes .rank-cat`           | 축 하나. 라벨과 값. CSS에는 두 구조가 모두 있습니다         |
 | `#notes ul li:first-child` ~ `:nth-child(6)` | NOTES, CHORD, PEAK, CHARGE, SCRATCH, SOF-LAN 색상 지정 순서 |
 
-CSS는 `#notes ul li:first-child > p`에 분홍(`#ff40eb`), 6번째에 파랑(`#0086e5`)을 지정합니다. 축 순서가 고정임을 시사합니다. 파서는 축 이름 매칭을 우선하고, 이름이 없을 때만 순서 기반으로 채웁니다. `matchedByLabel: false`가 그 경우입니다.
+CSS는 `#notes ul li:first-child > p`에 분홍(`#ff40eb`), 6번째에 파랑(`#0086e5`)을 지정합니다. 축 순서가 고정임을 시사합니다. 파서는 축 이름 매칭을 우선합니다. 이름이 없을 때는 `#notes` 안에 숫자 항목이 정확히 6개일 때만 순서 기반으로 채우며, `matchedByLabel: false`가 그 경우입니다. 순서로 추정한 값은 iidx-rank에 보내지 않습니다.
 
 ## notesradar.html
 
-- 페이지 로드 후 `POST djdata/music/json/notesradar.html`이 비동기로 호출되어 레이더 값을 받습니다. `style`(또는 `play_style`) 파라미터를 받으며 비로그인 시 빈 본문을 돌려줍니다.
-- 익스텐션은 이 엔드포인트를 먼저 시도하고, 응답이 비면 DOM 파싱으로 대체합니다.
+- 페이지 로드 후 `POST djdata/music/json/notesradar.html`이 비동기로 호출되어 레이더 값을 받습니다. 응답 스키마를 확정하지 못해 익스텐션은 이 엔드포인트를 호출하지 않고 DOM만 읽습니다.
+- status.html과 notesradar.html에서 읽은 값 중 축 이름으로 매칭된 것, 그다음 값이 있는 것을 고릅니다.
 - DOM 구조는 status.html의 `#notes`와 같은 계열로 가정합니다. 같은 CSS(`status.css`)가 두 페이지를 함께 다룹니다.
 
 ## difficulty.html
 
-근거: `eacache.s.konaminet.jp/game/2dx/34/css/djdata/music.css`, `everybodyeverybody/iidx_eamuse_scraper`, `OhSorry-DP/ohSorry`의 `modules/eagateFetch.js`(level 모드 시절 구현)
+근거: `eacache.s.konaminet.jp/game/2dx/34/css/djdata/music.css`, `OhSorry-DP/ohSorry`의 `modules/eagateFetch.js`(level 모드 시절 구현. 이후 series.html 방식으로 바뀌어 현재 코드에는 없습니다)
 
 | 선택자                           | 내용                                                      |
 | -------------------------------- | --------------------------------------------------------- |
@@ -67,6 +67,7 @@ URL의 `difficult`는 게임 레벨보다 1 작습니다. 레벨 12는 `difficul
 로그인 세션 없이는 다음을 확정할 수 없습니다. 첫 실제 수집에서 확인하고 이 문서를 갱신합니다.
 
 - status.html의 실제 라벨 문자열(DJ POINT, 플레이 횟수의 정확한 표기와 합계 위치).
-- `json/notesradar.html`의 실제 응답 스키마와 파라미터 이름. 현재는 `style`과 `play_style`을 함께 보내고, 응답에서는 축 이름과 숫자를 재귀적으로 찾습니다.
+- `json/notesradar.html`의 실제 응답 스키마와 파라미터 이름. 확정되면 DOM 대신 이 응답을 쓸 수 있습니다.
 - 노트레이더 페이지의 DOM이 status.html과 실제로 동일한지.
-- 테이블 헤더 행이 있는지(파서는 `td` 4개 이상인 행만 처리하므로 헤더는 자연히 건너뜁니다).
+- 테이블 헤더 행이 있는지(파서는 `td`가 5개인 행만 곡으로 처리하므로 헤더는 건너뜁니다).
+- MISS COUNT는 difficulty.html에 없어 수집하지 않습니다. 필요하면 곡 상세 페이지 수집을 따로 설계합니다.
