@@ -12,8 +12,6 @@ type LoadExpectation = {
     acceptsCurrentDocument: boolean
 }
 
-const WEB_URL_PATTERN = /^https?:/
-
 export const wait = (ms: number, signal: AbortSignal) =>
     new Promise<void>((resolve, reject) => {
         if (signal.aborted) {
@@ -65,6 +63,9 @@ export const closeCollectionTab = async (tabId: number) => {
  * Waits until the tab finishes loading the expected URL.
  * Rejects right away when the tab is closed, the run is aborted, or the tab
  * finishes loading a different page, instead of waiting for the timeout.
+ * Without the `tabs` permission the tab URL is only readable on hosts listed
+ * in `host_permissions`, so a finished load with an unreadable URL counts as
+ * a different page.
  */
 export const waitForLoad = ({ tabId, url, signal, acceptsCurrentDocument }: LoadExpectation) =>
     new Promise<void>((resolve, reject) => {
@@ -83,8 +84,7 @@ export const waitForLoad = ({ tabId, url, signal, acceptsCurrentDocument }: Load
 
         const handleUpdated = (changedTabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
             if (changedTabId !== tabId || changeInfo.status !== 'complete') return
-            if (sameLocation(tab.url, url)) finish(null)
-            else if (WEB_URL_PATTERN.test(tab.url ?? '')) finish('url_mismatch')
+            finish(sameLocation(tab.url, url) ? null : 'url_mismatch')
         }
         const handleRemoved = (removedTabId: number) => {
             if (removedTabId === tabId) finish('tab_closed')

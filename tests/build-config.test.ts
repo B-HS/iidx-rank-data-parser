@@ -69,7 +69,14 @@ describe('buildManifest', () => {
         expect(manifest.default_locale).toBe('en')
         expect(manifest.name).toBe('__MSG_extName__')
         expect(manifest.description).toBe('__MSG_extDescription__')
-        expect(manifest.permissions).toEqual(['storage', 'unlimitedStorage', 'tabs'])
+    })
+
+    test('API 권한은 storage만 요청하고 선택 권한을 두지 않는다', () => {
+        const manifest = buildManifest(DEFAULT_RANK_ORIGIN)
+
+        expect(manifest.permissions).toEqual(['storage'])
+        expect(Object.keys(manifest)).not.toContain('optional_permissions')
+        expect(Object.keys(manifest)).not.toContain('optional_host_permissions')
     })
 })
 
