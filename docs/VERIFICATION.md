@@ -8,15 +8,15 @@ bun test            # fixture 기반 파서·계약·background·popup·i18n 테
 bun run build       # MV3 번들 생성
 ```
 
-최근 결과(2026-10-07):
+최근 결과(2026-10-08):
 
-| 검사                                              | 결과                                                                                                                                                                                                     |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bun run typecheck`                               | 오류 0                                                                                                                                                                                                   |
-| `bun test`                                        | 147 pass / 0 fail, 13개 파일                                                                                                                                                                             |
-| `bun run build`                                   | 성공. `host_permissions`는 e-agate와 `https://iidx.hyns.dev/*`, `content_scripts`는 e-agate용 `content-script.js`와 `https://iidx.hyns.dev/*`용 `rank-content-script.js` 두 항목, `permissions`는 그대로 |
-| `build/`                                          | `content-script.js`·`rank-content-script.js`·`background/index.js`·`popup/`·`_locales/{en,ja,ko}`가 산출되고 번들에 `/api/import/records` 호출이 없음                                                    |
-| `RANK_ORIGIN=http://localhost:3000 bun run build` | `host_permissions`와 iidx-rank용 content script의 `matches`가 `http://localhost:3000/*`로 바뀌고 background 번들에서 `iidx.hyns.dev`가 사라짐. 기본값으로 다시 빌드해 복귀 확인                          |
+| 검사                                              | 결과                                                                                                                                                                                                             |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun run typecheck`                               | 오류 0                                                                                                                                                                                                           |
+| `bun test`                                        | 165 pass / 0 fail, 15개 파일                                                                                                                                                                                     |
+| `bun run build`                                   | 성공. `host_permissions`는 e-agate와 `https://iidx.hyns.dev/*`, `content_scripts`는 e-agate용 `content-script.js`와 `https://iidx.hyns.dev/*`용 `rank-content-script.js` 두 항목, `permissions`는 `storage` 하나 |
+| `build/`                                          | `content-script.js`·`rank-content-script.js`·`background/index.js`·`popup/`·`_locales/{en,ja,ko}`가 산출되고 번들에 `/api/import/records` 호출이 없음                                                            |
+| `RANK_ORIGIN=http://localhost:3000 bun run build` | `host_permissions`와 iidx-rank용 content script의 `matches`가 `http://localhost:3000/*`로 바뀌고 background 번들에서 `iidx.hyns.dev`가 사라짐. 기본값으로 다시 빌드해 복귀 확인                                  |
 
 popup 레이아웃(폭 440px, ko·ja·en)은 이전 버전에서 headless Chrome으로 확인했고, 반영 카드의 문구와 진행 중 안내를 바꾼 뒤에는 다시 확인하지 않았습니다.
 
@@ -27,9 +27,12 @@ popup 레이아웃(폭 440px, ko·ja·en)은 이전 버전에서 headless Chrome
     - `chartId` 고정 벡터(iidx-rank 규칙 교차 검증)
 - `tests/dataset-builder.test.ts`, `tests/contract.test.ts`
     - dataset v2 검증, 경고를 포함한 `partial` 판정, 설정 스키마, rank-import v2 필드 집합
+- `tests/tab.test.ts`, `tests/collection-run.test.ts`(가짜 `chrome.tabs`·`chrome.storage`)
+    - 로딩 대기의 완료·URL 불일치·탭 닫힘·중단, 로딩이 끝났는데 탭 URL을 읽을 수 없을 때의 즉시 `url_mismatch`, URL을 읽을 수 없는 탭의 이동 방식
+    - 수집 한 번의 저장과 탭 정리, 저장소가 dataset 쓰기를 거부할 때의 `failed` 표시와 이전 데이터 보존, 난이도 페이지 대신 URL을 읽을 수 없는 곳에 도착했을 때의 레벨 실패
 - `tests/rank-client.test.ts`, `tests/rank-sync.test.ts`, `tests/build-config.test.ts`
     - 세션 확인 응답 분류, 자동·수동 반영의 시작 판단과 건너뜀 사유(`no_data`·`dp_unsupported`·`not_logged_in`), 화면이 보고한 결과와 실패 코드의 사유 매핑, `changes` 필드 수용, 만료 처리
-    - `RANK_ORIGIN` 정규화와 manifest 생성(`host_permissions`, content script 두 항목)
+    - `RANK_ORIGIN` 정규화와 manifest 생성(`host_permissions`, content script 두 항목, `permissions`가 `storage` 하나이고 선택 권한이 없음)
 - `tests/rank-bridge.test.ts`(jsdom), `tests/rank-handoff.test.ts`
     - content script의 `hello`·`payload`·`none` 전송과 `targetOrigin`, `ready`마다의 handoff 조회, `result` 검증과 전달
     - 다른 창·다른 출처·다른 채널·형식이 다른 메시지 무시, handoff 10분 만료 경계, content script 요청의 보낸 쪽 확인
@@ -88,7 +91,21 @@ popup 레이아웃(폭 440px, ko·ja·en)은 이전 버전에서 headless Chrome
 9. **일치하지 않은 곡**: 건수와 앞 5건이 곡명·난이도로 보이면 곡명 표기 차이 후보입니다. 서버 별칭 표 작성의 근거로 기록합니다.
 10. **다른 페이지**: iidx-rank의 `/import`가 아닌 페이지를 열어 둔 채 반영해도 그 페이지의 동작이 달라지지 않아야 합니다.
 
-### 5. export와 삭제
+### 5. 권한 축소 뒤 확인
+
+`tabs`와 `unlimitedStorage`를 뺀 빌드(`build/manifest.json`의 `permissions`가 `["storage"]`)를 실제 Chrome에 로드해 확인합니다. 근거는 `docs/ARCHITECTURE.md`의 "요청하지 않는 권한"입니다.
+
+1. **설치 경고**: `chrome://extensions`의 세부정보에서 사이트 액세스가 `p.eagate.573.jp`와 iidx-rank 출처 두 곳뿐이고 "방문 기록 읽기" 항목이 없는지 확인합니다. 이전 빌드를 덮어쓴 경우와 새로 로드한 경우 모두 오류 없이 로드되어야 합니다.
+2. **수집 전체 흐름**: `로그인 확인` 뒤 레벨 하나로 수집합니다. 수집 탭이 열리고 DJ 정보 → 노트레이더 → 난이도 페이지 순으로 넘어가며, 페이지마다 25초를 기다리지 않고 바로 다음으로 진행되어 `완료`로 끝나야 합니다. 정상 페이지인데 `예상과 다른 페이지가 열렸습니다`로 실패하면 탭 URL을 읽지 못하는 것이므로 판정 근거가 틀린 것입니다.
+3. **중단**: 수집 중 `수집 중단`을 누르면 즉시 멈추고 수집 탭이 닫혀야 합니다.
+4. **탭을 직접 닫기**: 수집 중 수집 탭을 손으로 닫습니다. 25초를 기다리지 않고 탭 닫힘 사유로 끝나며, 그때까지 모은 차트가 있으면 `partial`로 저장되어야 합니다.
+5. **수집 중 다른 사이트로 이동**: 수집 중 수집 탭의 주소창에 `https://example.com`을 넣어 이동합니다. 다음 페이지 요청에서 탭이 다시 e-agate로 돌아와 수집이 이어지거나, 그 페이지가 `예상과 다른 페이지가 열렸습니다` 경고와 함께 레벨 실패로 기록되어야 합니다. 25초 로딩 초과로 수집 전체가 끊기면 안 됩니다.
+6. **로그아웃 상태**: e-amusement에서 로그아웃한 상태로 `로그인 확인`을 누릅니다. 페이지가 다른 호스트의 로그인 화면으로 넘어가더라도 25초를 기다리지 않고 `로그인 필요` 또는 확인 실패가 표시되어야 합니다.
+7. **반영 화면 열기**: `iidx-rank 로그인 열기`와 `가져오기 화면을 열어 반영`이 각각 새 활성 탭을 열고, `/import` 화면이 데이터를 받아 결과를 popup에 남겨야 합니다(4번 절차의 2·3항과 같음).
+8. **서비스 워커 콘솔**: `chrome://extensions`의 서비스 워커 검사 창에 권한 관련 오류(`Cannot access`, `permission`)가 없어야 합니다.
+9. **저장 용량**: 전 레벨을 수집한 뒤 서비스 워커 콘솔에서 `await chrome.storage.local.getBytesInUse()`가 10,485,760보다 충분히 작은지(예상 2~3MB) 확인합니다.
+
+### 6. export와 삭제
 
 1. `JSON 내보내기`로 파일을 저장하고 `format`·`schemaVersion: 2`·`charts` 길이와 `meta.warnings`의 `{ key, params }` 형태를 확인합니다.
 2. `iidx-rank용 내보내기`로 받은 파일에서 `version: 2`·`kind`·`chartId` 형식을 확인합니다.
@@ -103,7 +120,9 @@ popup 레이아웃(폭 440px, ko·ja·en)은 이전 버전에서 headless Chrome
 - 가져오기 화면(`/import`)과의 메시지 대화는 계약 문서(`docs/E-AMUSEMENT.md`의 "익스텐션 반영 흐름 (페이지 경유)")만 보고 구현했고 실제 화면과 함께 실행해 보지 않았습니다. content script가 실제 Chrome에서 `http://localhost:3000/*`처럼 포트가 있는 match pattern으로 주입되는지도 실기 확인이 필요합니다(Chrome 문서는 포트 지정을 지원한다고 적고 있습니다).
 - iidx-rank의 `/api/extension/session`은 계약 문서만 보고 구현했습니다. `handle`은 `string | null`로 가정합니다.
 - 수집 직후 자동으로 열리는 `/import` 탭이 활성 탭이 되는 것은 계약대로이며, 사용자가 다른 작업 중일 때의 사용성은 실기에서 확인합니다.
-- 세션 만료가 `/gate/p/login.html` 리다이렉트로 오면 `session_expired`가 아니라 `url_mismatch`로 잡혀 재시도 후 레벨 실패 경로를 탑니다.
+- 세션 만료가 `/gate/p/login.html` 리다이렉트로 오면 `session_expired`가 아니라 `url_mismatch`로 잡혀 재시도 후 레벨 실패 경로를 탑니다. 리다이렉트가 e-agate 밖의 호스트로 가면 `tabs` 권한이 없어 탭 URL을 읽지 못하지만 같은 `url_mismatch`로 처리합니다.
+- `tabs`·`unlimitedStorage`를 뺀 뒤의 동작은 Chrome 공식 문서와 Chromium 소스, 가짜 `chrome`을 쓴 단위 테스트로만 확인했습니다. 실제 Chrome에 로드해 본 것이 아니므로 "5. 권한 축소 뒤 확인"을 거쳐야 합니다. 특히 host permission만으로 `onUpdated`의 `tab.url`이 채워지는지, 새로 만든 탭에서 탐색 전에 `complete`가 오지 않는지가 판정의 전제입니다.
+- 전 레벨 수집의 실제 저장 크기는 재지 못했습니다. 표본 객체로 잰 예상은 한도의 20~30%입니다. 한도 초과 시 popup에는 구체적 사유 없이 `error_unknown` 문구가 보입니다.
 - 0곡 레벨은 `warning_level_first_page_empty` 때문에 `partial`로 표시될 수 있습니다.
 - `unmatchedCount`는 서버가 200건으로 자른 뒤의 길이입니다.
 - 수집 탭이 활성 탭을 계속 가져가므로 수집 중 popup은 닫힙니다. 비활성 탭 수집은 실기 확인 전이라 적용하지 않았습니다.

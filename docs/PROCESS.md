@@ -40,3 +40,25 @@ main의 기본값: i18n은 Chrome 공식 `chrome.i18n`(`_locales`)을 쓰고 브
 사용자 지적(2026-10-07): 반영이 `ORIGIN_NOT_ALLOWED`로 실패했고 서버에 익스텐션 ID를 등록하는 절차를 없애 달라는 요청이었습니다. 사용자 결정으로 익스텐션은 iidx-rank의 가져오기 화면을 열고, 화면이 업로드 중 표시 뒤 결과 표를 보여 줍니다. 계약은 iidx-rank 저장소 `docs/E-AMUSEMENT.md`의 "익스텐션 반영 흐름 (페이지 경유)"입니다.
 
 검증: `bun run typecheck` 오류 0, `bun test` 148 pass, `bun run build` 성공(content_scripts에 e-agate용과 `https://iidx.hyns.dev/*`용 두 항목). 로컬 iidx-rank 서버의 `/import` 화면에 빌드된 `rank-content-script.js`를 넣고 background 응답만 흉내 내어 hello → ready → payload → 업로드 → result 보고까지 확인했습니다.
+
+## `tabs`·`unlimitedStorage` 권한 검토와 제거
+
+현재 상태: 구현·자동 검증·기록 완료 (4/4). commit·push와 실제 Chrome 확인은 대기
+
+- [x] a. `chrome.tabs` 사용처와 `Tab`·`MessageSender` 속성 읽기 지점 전수 대조, 공식 문서 근거 확인
+- [x] b. 저장 값 크기 측정(실제 스키마로 만든 표본)과 저장 실패 경로 확인
+- [x] c. manifest에서 두 권한 제거, URL을 읽을 수 없는 탭의 로딩 판정을 fail-closed로 변경, 테스트 추가
+- [x] d. 문서 갱신 — README 권한 표, ARCHITECTURE 권한 경계와 근거, VERIFICATION 수동 절차
+
+배경: Chrome 웹 스토어 제출 양식이 전용 목적에 필요하지 않은 권한을 거부 사유로 안내합니다. `tabs`는 설치 시 방문 기록 읽기 경고를 띄웁니다.
+
+판정:
+
+- `tabs` 제거 가능. 탭 생성·이동·새로고침·닫기·`sendMessage`·`onUpdated`·`onRemoved`는 권한이 필요 없고, `tabs` 권한이 주는 `Tab.url`은 host permission이 있는 e-agate 페이지에서 그대로 읽힙니다. `pendingUrl`·`title`·`favIconUrl`은 쓰지 않습니다. content script 요청의 `sender` 검사는 `tabs` 권한과 무관합니다.
+- `unlimitedStorage` 제거 가능. 기본 한도 10MB에 대해 현실적 최대 저장 크기는 2.1~3.0MB(20~29%)입니다. 코드 상한(36,000차트)은 9.1~14.5MB로 한도를 넘을 수 있으나 도달하지 않는 값이고, 넘더라도 수집이 `failed`로 표시되며 이전 데이터가 남습니다.
+
+코드 변경: `waitForLoad`가 로딩이 끝난 탭의 URL을 읽을 수 없으면 기다리지 않고 `url_mismatch`로 끝냅니다. 바꾸지 않으면 e-agate 밖으로 넘어간 탭에서 25초 로딩 초과가 되어 수집 전체가 끊깁니다. 요청 간격과 순회 규칙은 그대로입니다.
+
+검증: `bun run typecheck` 오류 0, `bun test` 165 pass(15개 파일), `bun run build` 성공(`permissions`는 `["storage"]`, `host_permissions`는 e-agate와 `https://iidx.hyns.dev/*`).
+
+남은 확인: 실제 Chrome에서의 동작은 확인하지 못했습니다. 절차는 `docs/VERIFICATION.md`의 "5. 권한 축소 뒤 확인"입니다. 스토어 양식의 권한 사유 칸에는 `storage`와 호스트 권한 두 개만 남습니다.

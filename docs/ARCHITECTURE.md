@@ -62,6 +62,7 @@ background는 popup의 요청을 받으면 `runCollection`을 실행합니다. �
 실패 처리 규칙:
 
 - 페이지는 2회까지 시도합니다. 응답에는 요청 URL과 같은 URL인지 확인합니다.
+- 로딩이 끝난 탭의 URL이 기대한 URL과 다르거나 읽을 수 없으면 `url_mismatch`입니다. `tabs` 권한이 없어 `host_permissions` 밖의 호스트로 넘어간 탭은 URL이 비어 오므로, 읽을 수 없는 경우를 기대한 페이지가 아닌 것으로 처리합니다(`src/background/tab.ts`의 `waitForLoad`). 로딩 초과(25초)까지 기다리지 않습니다.
 - 탭 닫힘·로딩 초과(25초)·세션 만료·연속 2레벨 실패가 나오면 남은 레벨을 실패로 표시하고 지금까지 모은 결과를 저장합니다. 상태는 `partial`입니다.
 - 차트가 0건이고 실패 레벨이 있으면 저장하지 않고 실패로 끝냅니다. 이전의 정상 데이터를 빈 결과로 덮지 않기 위함입니다.
 - 중단은 `AbortController`로 대기를 즉시 끊습니다. 수집 중에는 로그인 확인과 데이터 삭제를 거부합니다(`error_busy`).
@@ -96,14 +97,53 @@ service worker는 수집 도중 종료될 수 있습니다. 기동 시와 `GET_O
 
 ## 권한 경계
 
-| 권한                                | 사용 목적                                  |
-| ----------------------------------- | ------------------------------------------ |
-| `storage`, `unlimitedStorage`       | 수집 결과·로그인 상태·설정·반영 결과 저장  |
-| `tabs`                              | 수집용 탭 생성·닫기·이동, 페이지 로딩 대기 |
-| `host_permissions: p.eagate.573.jp` | 수집 대상 호스트 한정                      |
-| `host_permissions: <RANK_ORIGIN>`   | iidx-rank 세션 확인, content script 주입   |
+| 권한                                | 사용 목적                                                           |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| `storage`                           | 수집 결과·로그인 상태·설정·반영 결과 저장                           |
+| `host_permissions: p.eagate.573.jp` | 수집 대상 호스트 한정, content script 주입, 수집 탭의 로딩 URL 읽기 |
+| `host_permissions: <RANK_ORIGIN>`   | iidx-rank 세션 확인, content script 주입                            |
 
-계정 비밀번호·쿠키 값을 코드에서 읽거나 저장하지 않습니다. iidx-rank 세션 확인은 `credentials: 'include'`로 브라우저가 세션 쿠키를 붙이게 하며 쿠키 헤더를 직접 다루지 않습니다. 가져오기 화면 경유로 바꾸면서 새로 추가한 권한은 없습니다.
+계정 비밀번호·쿠키 값을 코드에서 읽거나 저장하지 않습니다. iidx-rank 세션 확인은 `credentials: 'include'`로 브라우저가 세션 쿠키를 붙이게 하며 쿠키 헤더를 직접 다루지 않습니다. 가져오기 화면 경유로 바꾸면서 새로 추가한 권한은 없습니다. `optional_permissions`와 `activeTab`도 쓰지 않습니다.
+
+### 요청하지 않는 권한
+
+`tabs`와 `unlimitedStorage`는 2026-10-08에 뺐습니다. `tests/build-config.test.ts`가 `permissions`를 `['storage']`로 고정합니다.
+
+`tabs`가 필요 없는 근거:
+
+- Chrome 문서는 탭 생성·새로고침·이동에 권한이 필요 없다고 적습니다. "Most features don't require any permissions to use. For example: creating a new tab, reloading a tab, navigating to another URL, etc." (<https://developer.chrome.com/docs/extensions/reference/api/tabs>)
+- `tabs` 권한이 주는 것은 `Tab`의 민감한 네 속성(`url`, `pendingUrl`, `title`, `favIconUrl`)뿐이고, 같은 속성을 host permission으로도 읽습니다. "This property is only present if the extension has the "tabs" permission or has host permissions for the page." (같은 문서의 `Tab.url`)
+- 권한 목록 문서도 같은 말을 합니다. "Gives access to privileged fields of the Tab objects used by several APIs, including chrome.tabs and chrome.windows. You usually don't need to declare this permission to use those APIs." 경고 문구는 "Read your browsing history"입니다. (<https://developer.chrome.com/docs/extensions/reference/permissions-list>)
+
+| 사용처                                                    | 쓰는 것                                                                       | `tabs` 없이                                                                 |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `tab.ts` `openCollectionTab`, `rank.ts`의 화면 열기 두 곳 | `chrome.tabs.create`, 반환값의 `id`                                           | 권한 불필요. `id`는 민감 속성이 아님                                        |
+| `tab.ts` `closeCollectionTab`                             | `chrome.tabs.remove`                                                          | 권한 불필요                                                                 |
+| `tab.ts` `waitForLoad`                                    | `onUpdated`의 `changeInfo.status`·`tab.url`, `onRemoved`                      | `status`는 항상 옴. `tab.url`은 e-agate에서는 host permission으로 읽힘      |
+| `tab.ts` `waitForLoad`(이미 로딩된 문서), `navigate`      | `chrome.tabs.get`의 `status`·`url`                                            | 위와 같음. 읽을 수 없으면 성공으로 보지 않고, 새로고침 대신 대상 URL로 이동 |
+| `tab.ts` `navigate`                                       | `chrome.tabs.update({ url })`, `chrome.tabs.reload`                           | 권한 불필요                                                                 |
+| `tab.ts` `requestExtract`                                 | `chrome.tabs.sendMessage`                                                     | 권한 불필요. 응답하는 content script는 `content_scripts`로 주입             |
+| `index.ts`의 보낸 쪽 검사(`isRankTabSender`)              | `sender.id`, `sender.tab.id`, `sender.frameId`, `sender.url`, `sender.origin` | `MessageSender`의 값이며 `tabs` 권한과 무관                                 |
+
+`pendingUrl`, `title`, `favIconUrl`은 코드 어디에서도 읽지 않습니다. `chrome.tabs.query`, `chrome.windows`, `chrome.scripting`도 쓰지 않습니다.
+
+달라지는 것은 하나입니다. 수집 탭이 e-agate 밖의 호스트(예: 다른 도메인의 로그인·점검 화면)로 넘어가면 `tab.url`이 비어 옵니다. 이전 코드는 `http(s)` URL일 때만 불일치로 판정해 이 경우 25초 로딩 초과(`load_timeout`, 수집 전체 중단)가 되었을 것이므로, 로딩이 끝났는데 기대한 URL임을 확인하지 못하면 바로 `url_mismatch`(재시도 뒤 레벨 실패)로 처리하도록 바꿨습니다. `tabs` 권한이 있던 때와 같은 결과입니다. Chromium은 `complete`를 탐색이 커밋된 뒤의 첫 로딩 종료에만 보내므로(`chrome/browser/extensions/api/tabs/tabs_event_router.cc`의 `TabEntry::DidStopLoading`), 탐색 전의 빈 문서 때문에 잘못 실패하지 않는다고 판단했습니다. 실제 Chrome 확인은 `docs/VERIFICATION.md`의 수동 절차에 남겼습니다.
+
+`unlimitedStorage`가 필요 없는 근거:
+
+- `chrome.storage.local`의 기본 한도는 10MB입니다. "The storage limit is 10 MB (5 MB in Chrome 113 and earlier), but can be increased by requesting the "unlimitedStorage" permission." 한도는 "the JSON stringification of every value plus every key's length"로 잽니다. (<https://developer.chrome.com/docs/extensions/reference/api/storage>) manifest의 `minimum_chrome_version`이 116이라 10MB가 적용됩니다.
+- 한 번에 저장하는 dataset은 SP나 DP 한쪽입니다. 저장 값 전체(dataset·수집 상태·로그인·설정·세션)를 실제 스키마로 만들어 잰 크기는 다음과 같습니다. MB는 10^6바이트이고 비율은 한도 10,485,760바이트 대비입니다. 차트 하나는 곡명 길이에 따라 281~398바이트입니다.
+
+| 가정                                                   | 차트 수 | 저장 값 합계(UTF-8) | 한도 대비 |
+| ------------------------------------------------------ | ------: | ------------------: | --------: |
+| 현실적 최대(전 레벨, 곡명 일본어 약 20자)              |   7,500 |              2.13MB |       20% |
+| 현실적 최대에 곡명 일본어 약 57자                      |   7,500 |              3.01MB |       29% |
+| 진행률 추정 상수(`DIFFICULTY_PAGE_ESTIMATE` 16쪽 × 12) |   9,600 |         2.73~3.85MB |    26~37% |
+| 코드 상한(12레벨 × 60쪽 × 50건)                        |  36,000 |         9.09~14.5MB |   87~138% |
+
+- 현실적 최대의 7,500차트는 실측이 아닌 추정입니다. 한도에 닿으려면 한 스타일에 약 26,000차트(곡명 57자)에서 37,000차트(곡명 20자)가 있어야 하고, 이는 수록곡을 3,000곡으로 잡고 곡마다 난이도 5개가 모두 있다고 가정한 15,000차트보다 많습니다. 코드 상한은 무한 순회를 막는 안전장치라 실제로 도달하는 값이 아닙니다.
+- 한도를 넘는 쓰기는 "fail immediately and set runtime.lastError when using a callback, or a rejected Promise if using async/await"이며, 이때 `runCollection`은 수집을 `failed`(`error_unknown`)로 표시하고 이전 dataset을 그대로 둡니다(`tests/collection-run.test.ts`).
+- `chrome.storage.session`에는 수집 탭 ID와 handoff 식별자만 두며, 이 영역의 한도는 `unlimitedStorage`와 무관합니다.
 
 `RANK_ORIGIN`은 빌드 시 환경변수로 정합니다. 기본값은 `https://iidx.hyns.dev`이고 `config/manifest.ts`가 `host_permissions`와 iidx-rank용 `content_scripts` 항목(`<RANK_ORIGIN>/*`, `rank-content-script.js`, `document_idle`)을 만들며 같은 값이 번들 상수로 주입됩니다. 정적 `public/manifest.json`에는 iidx-rank 출처가 없고 e-agate용 content script만 있습니다.
 
