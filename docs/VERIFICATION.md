@@ -53,7 +53,7 @@ popup 레이아웃(폭 440px, ko·ja·en)은 이전 버전에서 headless Chrome
 
 ### 1. 로드
 
-1. `chrome://extensions`에서 개발자 모드를 켜고 `build/`를 로드합니다.
+1. 소스 빌드는 `chrome://extensions`에서 개발자 모드를 켜고 `build/`를 로드합니다. 스토어 게시본(항목 ID `ihhbemlpcommigeghkpfahgncipbikmk`, <https://chromewebstore.google.com/detail/iidx-data-parser/ihhbemlpcommigeghkpfahgncipbikmk>)은 스토어에서 설치해 같은 절차를 확인합니다.
 2. popup이 열리고 두 로그인 카드가 `미확인`으로 보이는지 확인합니다. 브라우저 언어(ko·ja·en)에 맞춘 문구인지 확인합니다.
 
 ### 2. e-amusement 로그인
@@ -95,7 +95,7 @@ popup 레이아웃(폭 440px, ko·ja·en)은 이전 버전에서 headless Chrome
 
 `tabs`와 `unlimitedStorage`를 뺀 빌드(`build/manifest.json`의 `permissions`가 `["storage"]`)를 실제 Chrome에 로드해 확인합니다. 근거는 `docs/ARCHITECTURE.md`의 "요청하지 않는 권한"입니다.
 
-1. **설치 경고**: `chrome://extensions`의 세부정보에서 사이트 액세스가 `p.eagate.573.jp`와 iidx-rank 출처 두 곳뿐이고 "방문 기록 읽기" 항목이 없는지 확인합니다. 이전 빌드를 덮어쓴 경우와 새로 로드한 경우 모두 오류 없이 로드되어야 합니다.
+1. **설치 경고**: 스토어 설치 화면의 권한 안내와 `chrome://extensions`의 세부정보에서 사이트 액세스가 `p.eagate.573.jp`와 iidx-rank 출처 두 곳뿐이고 "방문 기록 읽기" 항목이 없는지 확인합니다. 이전 빌드를 덮어쓴 경우와 새로 로드한 경우 모두 오류 없이 로드되어야 합니다.
 2. **수집 전체 흐름**: `로그인 확인` 뒤 레벨 하나로 수집합니다. 수집 탭이 열리고 DJ 정보 → 노트레이더 → 난이도 페이지 순으로 넘어가며, 페이지마다 25초를 기다리지 않고 바로 다음으로 진행되어 `완료`로 끝나야 합니다. 정상 페이지인데 `예상과 다른 페이지가 열렸습니다`로 실패하면 탭 URL을 읽지 못하는 것이므로 판정 근거가 틀린 것입니다.
 3. **중단**: 수집 중 `수집 중단`을 누르면 즉시 멈추고 수집 탭이 닫혀야 합니다.
 4. **탭을 직접 닫기**: 수집 중 수집 탭을 손으로 닫습니다. 25초를 기다리지 않고 탭 닫힘 사유로 끝나며, 그때까지 모은 차트가 있으면 `partial`로 저장되어야 합니다.

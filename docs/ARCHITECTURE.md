@@ -2,6 +2,8 @@
 
 ## 구성 요소
 
+배포 상태: Chrome 웹 스토어에 게시되었습니다(항목 ID `ihhbemlpcommigeghkpfahgncipbikmk`, <https://chromewebstore.google.com/detail/iidx-data-parser/ihhbemlpcommigeghkpfahgncipbikmk>). 스토어 제출용 zip은 `bun run pack`이 `release/`에 만들며 저장소에는 추적하지 않습니다.
+
 | 경로                                    | 역할                                                                 |
 | --------------------------------------- | -------------------------------------------------------------------- |
 | `src/content-script.ts`                 | e-agate 페이지에서 DOM을 읽어 파싱 결과를 돌려주는 브리지            |

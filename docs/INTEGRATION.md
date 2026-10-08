@@ -4,6 +4,8 @@
 
 대상: `/Users/hyunseokbyun/development/iidx-rank` (Next.js + Drizzle + better-auth)
 
+배포: 익스텐션은 Chrome 웹 스토어에 게시되었습니다(항목 ID `ihhbemlpcommigeghkpfahgncipbikmk`, <https://chromewebstore.google.com/detail/iidx-data-parser/ihhbemlpcommigeghkpfahgncipbikmk>). 개인정보처리방침은 `https://iidx.hyns.dev/en/privacy`입니다. 대상 출처는 빌드 시 `RANK_ORIGIN`으로 정하며 기본값은 `https://iidx.hyns.dev`입니다.
+
 ## 방식 — 가져오기 화면 경유
 
 익스텐션은 사용자를 따로 인증하지 않고 `POST /api/import/records`도 직접 호출하지 않습니다. iidx-rank의 가져오기 화면(`<RANK_ORIGIN>/import`)을 열어 수집 데이터를 넘기면, 그 화면이 사이트 자신의 요청으로 업로드하고 결과를 돌려줍니다. 서버에 익스텐션 ID를 등록하지 않으며 ID가 바뀌어도 영향이 없습니다. 일회용 코드를 교환하는 인증 위임 설계는 채택하지 않았습니다.

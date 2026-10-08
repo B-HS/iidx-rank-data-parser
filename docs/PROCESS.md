@@ -62,3 +62,18 @@ main의 기본값: i18n은 Chrome 공식 `chrome.i18n`(`_locales`)을 쓰고 브
 검증: `bun run typecheck` 오류 0, `bun test` 165 pass(15개 파일), `bun run build` 성공(`permissions`는 `["storage"]`, `host_permissions`는 e-agate와 `https://iidx.hyns.dev/*`).
 
 남은 확인: 실제 Chrome에서의 동작은 확인하지 못했습니다. 절차는 `docs/VERIFICATION.md`의 "5. 권한 축소 뒤 확인"입니다. 스토어 양식의 권한 사유 칸에는 `storage`와 호스트 권한 두 개만 남습니다.
+
+## 스토어 게시 반영과 README 개편
+
+현재 상태: 구현·검증 완료 (4/4). commit·push는 메인이 진행
+
+- [x] a. README를 영어 제품 소개 형식(머리, 스크린샷, Features, Install, How it works, Permissions, Privacy, Development)으로 재작성
+- [x] b. `docs/assets/app-icon.png`(`public/icons/icon128.png` 복사)와 `docs/assets/screenshot.png`(popup 렌더 캡처) 추가
+- [x] c. ARCHITECTURE·INTEGRATION·VERIFICATION에 스토어 게시 사실과 주소 반영
+- [x] d. `.gitignore`에 `*.zip` 추가(스토어 제출용 zip은 추적하지 않는 산출물)
+
+배경: Chrome 웹 스토어에 게시되었습니다. 항목 ID `ihhbemlpcommigeghkpfahgncipbikmk`, 주소 <https://chromewebstore.google.com/detail/iidx-data-parser/ihhbemlpcommigeghkpfahgncipbikmk>.
+
+스크린샷: 현재 `build/popup`에 가짜 `chrome`(i18n·runtime·storage) 스텁과 `buildOverview` 표본(DJ NAME `SAMPLE`, 계정 `Sample User`, 수집 완료 612차트, 반영 성공)을 주입한 정적 페이지를 로컬 서버로 띄워 영어 화면을 캡처했습니다. 실제 계정 정보는 쓰지 않았습니다.
+
+검증: README와 문서의 상대 경로 존재 확인, README 명령과 `package.json` 스크립트 대조, `bunx prettier --check`, `git status`로 소스 변경 없음 확인. 실제 Chrome에서 스토어 설치본을 열어 본 확인은 하지 못했습니다.

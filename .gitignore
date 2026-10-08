@@ -36,3 +36,6 @@ release
 
 # Finder (macOS)
 .DS_Store
+
+# Store submission archives
+*.zip
